@@ -24,13 +24,13 @@ vi.mock('socket.io-client', () => ({
 import { connectToRoom } from './roomSocket.js';
 
 afterEach(() => {
-  vi.unstubAllGlobals();
+  globalThis.sessionStorage?.clear();
+  if (globalThis.window) delete globalThis.window.roomSocket;
   mockSocket.handlers = {};
   mockSocket.emitted = [];
   mockSocket.connected = false;
   mockSocket.disconnected = false;
-  sessionStorage.clear();
-  delete window.roomSocket;
+  vi.unstubAllGlobals();
 });
 
 describe('room socket session lifecycle protocol', () => {
