@@ -27,7 +27,6 @@ export function connectToRoom({ roomId, userName, onStatus, onEvent }) {
       socket.emit('joinRoom', { roomId, userName });
       socket.emit('requestAllTickets');
       socket.emit('requestFullStateResync');
-      socket.emit('requestCurrentStory');
     });
   };
 
