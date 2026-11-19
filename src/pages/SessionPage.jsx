@@ -35,6 +35,7 @@ export default function SessionPage() {
   const [storyPoints, setStoryPoints] = useState({});
   const [notice, setNotice] = useState('');
   const [hostRequestBusy, setHostRequestBusy] = useState(false);
+  const [storySearch, setStorySearch] = useState('');
 
   const active = tickets[selectedStory];
   const cards = useMemo(() => scales[votingSystem] || scales.fibonacci, [votingSystem]);
@@ -271,6 +272,17 @@ export default function SessionPage() {
         <section className="room-main">
           <div className="room-title-row"><div><p className="eyebrow">ESTIMATION SESSION</p><h1>{sessionStorage.getItem('sessionName') || 'Team planning'}</h1></div><span className="status-label">{active ? `Story ${selectedStory + 1} of ${tickets.length}` : 'Waiting for stories'}</span></div>
           {notice && <p className="status-label" role="status">{notice}</p>}
+          <section className="story-list-panel">
+            <div className="voting-heading"><div><h2>Stories</h2><p>{tickets.length} {tickets.length === 1 ? 'story' : 'stories'} in this session</p></div></div>
+            {tickets.length > 3 && <input className="story-search" type="search" value={storySearch} onChange={(event) => setStorySearch(event.target.value)} placeholder="Search stories…" aria-label="Search stories" />}
+            {tickets.length > 0 && <div className="story-list" aria-label="Session stories">
+              {tickets.map((ticket, index) => ({ ticket, index })).filter(({ ticket }) => `${ticket.text || ticket.title || ''} ${ticket.idDisplay || ''}`.toLowerCase().includes(storySearch.toLowerCase())).map(({ ticket, index }) => (
+                <button key={ticket.id} className={index === selectedStory ? 'story-list-item active' : 'story-list-item'} onClick={() => selectStory(index)}>
+                  <span className="story-list-index">{index + 1}</span><span className="story-list-title">{ticket.text || ticket.title || 'Untitled story'}</span><span className="story-list-points">{storyPoints[ticket.id] ?? ticket.points ?? '?'}</span>
+                </button>
+              ))}
+            </div>}
+          </section>
           <section className="story-panel">
             <div className="panel-label">CURRENT STORY</div>
             {active ? <>
