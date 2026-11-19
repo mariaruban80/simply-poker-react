@@ -7,7 +7,8 @@ const scales = {
   fibonacci: ['0', '1', '2', '3', '5', '8', '13', '20', '40', '100', '?', '☕'],
   shortFib: ['0', '1', '2', '3', '5', '8', '13', '?', '☕'],
   tshirt: ['XS', 'S', 'M', 'L', 'XL', 'XXL', '?', '☕'],
-  tshirtNum: ['XS', 'S', 'M', 'L', 'XL', 'XXL', '1', '2', '3', '5', '8', '13', '?', '☕'],
+  tshirtNum: ['XS (1)', 'S (2)', 'M (3)', 'L (5)', 'XL (8)', 'XXL (13)'],
+  custom: ['?', '☕', '∞'],
 };
 
 const normaliseTickets = (value) => Array.isArray(value) ? value.filter((ticket) => ticket?.id) : [];
@@ -57,6 +58,10 @@ export default function SessionPage() {
       onStatus: (ok, message) => { setConnected(ok); setStatus(message); },
       onEvent: (type, payload) => {
         if (type === 'userList') setUsers(Array.isArray(payload) ? payload : []);
+        if (type === 'joinSessionResult') {
+          setIsHost(Boolean(payload.isHost));
+          sessionStorage.setItem('isHost', String(Boolean(payload.isHost)));
+        }
         if (type === 'allTickets') setTickets(normaliseTickets(payload.tickets));
         if (type === 'resyncState') {
           setTickets(normaliseTickets(payload.tickets));
@@ -234,7 +239,7 @@ export default function SessionPage() {
           {canManage && <form className="add-story-form" onSubmit={addStory}><input value={newTicket} onChange={(event) => setNewTicket(event.target.value)} placeholder="Add a story or ticket title…" aria-label="New story title" /><button type="submit"><Plus size={15} /> Add story</button></form>}
           <section className="voting-panel">
             <div className="voting-heading"><div><h2>Your estimate</h2><p>{revealed ? 'Voting is revealed. Reset to vote again.' : 'Choose a card that reflects the effort involved.'}</p></div>{selectedVote !== null && <span className="vote-confirmation">Vote submitted</span>}</div>
-            {isHost && <label className="status-label">Voting scale <select value={votingSystem} onChange={(event) => changeScale(event.target.value)}><option value="fibonacci">Fibonacci</option><option value="shortFib">Short Fibonacci</option><option value="tshirt">T-Shirt sizes</option><option value="tshirtNum">T-Shirt + numbers</option></select></label>}
+            {isHost && <label className="status-label">Voting scale <select value={votingSystem} onChange={(event) => changeScale(event.target.value)}><option value="fibonacci">Fibonacci</option><option value="shortFib">Short Fibonacci</option><option value="tshirt">T-Shirt sizes</option><option value="tshirtNum">T-Shirt + numbers</option><option value="custom">Custom</option></select></label>}
             <div className="voting-cards">{cards.map((card) => <button key={card} className={`vote-card ${selectedVote === card ? 'chosen' : ''}`} onClick={() => vote(card)} disabled={!active || revealed}>{card}</button>)}</div>
           </section>
           {isHost && <div className="host-actions"><button className="action-secondary" onClick={reset}><RotateCcw size={16} /> Reset votes</button><button className="action-primary" onClick={reveal}><Eye size={16} /> Reveal votes</button></div>}
