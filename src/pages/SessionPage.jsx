@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Copy, Eye, Pencil, Plus, RotateCcw, Spade, Trash2, Users, Wifi, WifiOff } from 'lucide-react';
 import { connectToRoom } from '../services/roomSocket.js';
 import DataImportExport from '../components/DataImportExport.jsx';
+import { ProfileMenu, SessionTimer, FeedbackWidget } from '../components/SessionTools.jsx';
 
 const scales = {
   fibonacci: ['0', '1', '2', '3', '5', '8', '13', '20', '40', '100', '?', '☕'],
@@ -226,7 +227,7 @@ export default function SessionPage() {
           <span className={`connection-pill ${connected ? '' : 'offline'}`}>{connected ? <Wifi size={14} /> : <WifiOff size={14} />} {status}</span>
           <span className="room-code">Room: <b>{roomId}</b></span>
           <button className="icon-button" onClick={copy} aria-label="Copy invite link"><Copy size={17} /></button>
-          <button className="text-button" onClick={() => navigate('/')}>Leave</button>
+          <SessionTimer /><ProfileMenu userName={userName} isHost={isHost} onLeave={() => { sessionStorage.clear(); navigate('/'); }} />
         </div>
       </header>
       <main className="room-layout">
@@ -261,6 +262,7 @@ export default function SessionPage() {
           {revealed && <section className="results-panel"><h3>Voting results</h3><div className="result-chips">{visibleVotes.map((item) => <span key={item.id}>{item.name}: <b>{String(item.value)}</b></span>)}</div></section>}
         </section>
       </main>
+      <FeedbackWidget />
     </div>
   );
 }
