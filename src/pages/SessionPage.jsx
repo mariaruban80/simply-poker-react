@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Copy, Eye, Pencil, Plus, RotateCcw, Spade, Trash2, Users, Wifi, WifiOff } from 'lucide-react';
 import { connectToRoom } from '../services/roomSocket.js';
@@ -38,6 +38,8 @@ export default function SessionPage() {
   const [storySearch, setStorySearch] = useState('');
 
   const active = tickets[selectedStory];
+  const activeStoryIdRef = useRef(active?.id);
+  activeStoryIdRef.current = active?.id;
   const cards = useMemo(() => scales[votingSystem] || scales.fibonacci, [votingSystem]);
   const revealed = Boolean(active && revealedStories[active.id]);
   const votes = active ? (votesPerStory[active.id] || {}) : {};
@@ -101,7 +103,7 @@ export default function SessionPage() {
           }));
         }
         if (type === 'restoreUserVote' && payload.storyId) {
-          setSelectedVote((current) => active?.id === payload.storyId ? payload.vote : current);
+          if (activeStoryIdRef.current === payload.storyId) setSelectedVote(payload.vote);
         }
         if (type === 'votesRevealed' && payload.storyId) {
           setRevealedStories((old) => ({ ...old, [payload.storyId]: true }));
