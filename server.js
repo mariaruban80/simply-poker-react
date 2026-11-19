@@ -33,11 +33,17 @@ app.use(express.json());
 // Feedback email 
 
 app.post("/api/feedback", async (req, res) => {
-  const { feedback, email } = req.body;
+  const { feedback = "", email = "", emoji = "" } = req.body || {};
+  const safeFeedback = String(feedback).trim();
+  const safeEmail = String(email).trim();
+  const safeEmoji = String(emoji).trim();
 
-  if (!feedback || feedback.trim() === "") {
-    return res.status(400).json({ error: "Feedback message required" });
+  if (!safeFeedback && !safeEmoji) {
+    return res.status(400).json({ error: "Select an emoji or enter a feedback message." });
   }
+  const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  })[char]);
 
   try {
     let transporter;
@@ -68,9 +74,8 @@ app.post("/api/feedback", async (req, res) => {
       from: process.env.EMAIL_USER || process.env.SMTP_USER,
       to: process.env.EMAIL_TO, // hardcoded destination email in env
       subject: "📩 New Feedback Received",
-      text: `Feedback: ${feedback}\nUser Email: ${email || "Not provided"}`,
-      html: `<p><strong>Feedback:</strong> ${feedback}</p>
-             <p><strong>User Email:</strong> ${email || "Not provided"}</p>`
+      text: `Rating: ${safeEmoji || "Not provided"}\nFeedback: ${safeFeedback || "No written comment"}\nUser Email: ${safeEmail || "Not provided"}`,
+      html: `<p><strong>Rating:</strong> ${escapeHtml(safeEmoji || "Not provided")}</p><p><strong>Feedback:</strong> ${escapeHtml(safeFeedback || "No written comment")}</p><p><strong>User Email:</strong> ${escapeHtml(safeEmail || "Not provided")}</p>`
     });
 
     console.log("✅ Feedback email sent");
