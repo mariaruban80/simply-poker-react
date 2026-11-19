@@ -107,3 +107,15 @@
 .contact-form label{display:grid;gap:6px;margin:12px 0;font-size:12px;font-weight:600;color:#5e586d}
 @media(max-width:850px){.about-steps{grid-template-columns:repeat(2,1fr)}.about-feature-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.about-header{height:auto;min-height:65px;flex-wrap:wrap;padding:12px 17px;gap:10px}.about-header nav{order:3;width:100%;justify-content:space-between;gap:10px}.about-header nav a{font-size:11px}.about-start{padding:9px 13px;font-size:11px}.about-hero{padding:70px 20px}.about-intro,.about-features,.about-faq{padding:50px 20px}.about-steps,.about-feature-grid{grid-template-columns:1fr}.about-footer{align-items:flex-start;flex-direction:column}.room-meta{justify-content:flex-end}.profile-trigger span{display:none}.feedback-fab{right:12px;bottom:12px;padding:11px 13px}.about-dialog{max-height:92vh}.timer-popover{right:-30px}}
+
+
+/* React session story navigation */
+.story-list-panel{background:#fff;border:1px solid #e8e4f1;border-radius:16px;padding:18px;margin:0 0 18px;min-width:0}
+.story-search{width:100%;max-width:100%;box-sizing:border-box;margin:12px 0;padding:11px 13px;border:1px solid #d9d3e7;border-radius:9px;font:inherit}
+.story-list{display:flex;flex-direction:column;gap:7px;max-height:260px;overflow:auto;margin-top:12px}
+.story-list-item{display:flex;align-items:center;gap:11px;width:100%;min-width:0;text-align:left;padding:10px 12px;border:1px solid #eeeaf4;border-radius:10px;background:#fff;color:#302a3c;cursor:pointer}
+.story-list-item:hover,.story-list-item.active{border-color:#7952b3;background:#f7f3fc}
+.story-list-index{display:grid;place-items:center;flex:0 0 27px;height:27px;border-radius:8px;background:#eee8f7;color:#60418e;font-weight:700;font-size:12px}
+.story-list-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.story-list-points{font-weight:700;color:#67439b}
+@media(max-width:640px){.story-list-panel{padding:14px}.story-list{max-height:220px}.story-list-item{padding:9px}.room-meta{flex-wrap:wrap}}
