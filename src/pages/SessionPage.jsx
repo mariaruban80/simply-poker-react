@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Copy, Eye, Pencil, Plus, RotateCcw, Spade, Trash2, Users, Wifi, WifiOff } from 'lucide-react';
 import { connectToRoom } from '../services/roomSocket.js';
+import DataImportExport from '../components/DataImportExport.jsx';
 
 const scales = {
   fibonacci: ['0', '1', '2', '3', '5', '8', '13', '20', '40', '100', '?', '☕'],
@@ -133,6 +134,19 @@ export default function SessionPage() {
     }
   }, [active?.id]);
 
+  function importStories(importedStories) {
+    if (!canManage || !Array.isArray(importedStories)) return;
+    const existing = new Set(tickets.map((ticket) => ticket.id));
+    const fresh = importedStories.filter((ticket) => ticket?.id && !existing.has(ticket.id));
+    if (!fresh.length) {
+      setNotice('All selected stories are already in this session.');
+      return;
+    }
+    fresh.forEach((ticket) => window.roomSocket?.emit('addTicket', ticket));
+    setTickets((old) => [...old, ...fresh]);
+    setNotice(`Added ${fresh.length} stories to the session.`);
+  }
+
   function addStory(event) {
     event.preventDefault();
     const text = newTicket.trim();
@@ -236,6 +250,7 @@ export default function SessionPage() {
             </> : <div className="empty-state"><div className="empty-icon"><Spade size={25} /></div><h2>No stories added yet</h2><p>{canManage ? 'Add a story to start estimating with your team.' : 'Waiting for the host to add a story.'}</p></div>}
             {tickets.length > 0 && <div className="story-navigation"><button disabled={selectedStory === 0} onClick={() => selectStory(selectedStory - 1)}>Previous</button><button disabled={selectedStory >= tickets.length - 1} onClick={() => selectStory(selectedStory + 1)}>Next story</button></div>}
           </section>
+          {canManage && <DataImportExport isHost={isHost} tickets={tickets} votesPerStory={votesPerStory} revealedStories={revealedStories} onImportStories={importStories} onNotice={setNotice} />}
           {canManage && <form className="add-story-form" onSubmit={addStory}><input value={newTicket} onChange={(event) => setNewTicket(event.target.value)} placeholder="Add a story or ticket title…" aria-label="New story title" /><button type="submit"><Plus size={15} /> Add story</button></form>}
           <section className="voting-panel">
             <div className="voting-heading"><div><h2>Your estimate</h2><p>{revealed ? 'Voting is revealed. Reset to vote again.' : 'Choose a card that reflects the effort involved.'}</p></div>{selectedVote !== null && <span className="vote-confirmation">Vote submitted</span>}</div>
