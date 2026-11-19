@@ -34,6 +34,7 @@ export default function SessionPage() {
   const [votingSystem, setVotingSystem] = useState(sessionStorage.getItem('votingSystem') || 'fibonacci');
   const [storyPoints, setStoryPoints] = useState({});
   const [notice, setNotice] = useState('');
+  const [hostRequestBusy, setHostRequestBusy] = useState(false);
 
   const active = tickets[selectedStory];
   const cards = useMemo(() => scales[votingSystem] || scales.fibonacci, [votingSystem]);
@@ -122,7 +123,9 @@ export default function SessionPage() {
           sessionStorage.setItem('isHost', String(nowHost));
         }
         if (type === 'hostLeft' || type === 'hostReleased') {
-          setNotice('The session host has left or released host access.');
+          setIsHost(false);
+          sessionStorage.setItem('isHost', 'false');
+          setNotice('Host access is available. You can request to become the host.');
         }
       },
     });
@@ -208,6 +211,32 @@ export default function SessionPage() {
     window.roomSocket?.emit('votingSystemSelected', { roomId, votingSystem: value });
   }
 
+  function requestHost() {
+    const socket = window.roomSocket;
+    if (!socket?.connected || hostRequestBusy) {
+      setNotice('You must be connected to request host access.');
+      return;
+    }
+    setHostRequestBusy(true);
+    socket.emit('requestHost', { sessionId: roomId }, (response = {}) => {
+      setHostRequestBusy(false);
+      if (!response.allowed) setNotice(response.reason || 'Host access could not be granted.');
+      else {
+        setIsHost(true);
+        sessionStorage.setItem('isHost', 'true');
+        setNotice('You are now the session host.');
+      }
+    });
+  }
+
+  function releaseHost() {
+    if (!isHost) return;
+    window.roomSocket?.emit('releaseHost', { sessionId: roomId });
+    setIsHost(false);
+    sessionStorage.setItem('isHost', 'false');
+    setNotice('You have released host access.');
+  }
+
   async function copy() {
     const link = `${window.location.origin}/session/${roomId}`;
     try { await navigator.clipboard.writeText(link); setNotice('Invite link copied.'); }
@@ -227,6 +256,7 @@ export default function SessionPage() {
           <span className={`connection-pill ${connected ? '' : 'offline'}`}>{connected ? <Wifi size={14} /> : <WifiOff size={14} />} {status}</span>
           <span className="room-code">Room: <b>{roomId}</b></span>
           <button className="icon-button" onClick={copy} aria-label="Copy invite link"><Copy size={17} /></button>
+          {isHost ? <button className="action-secondary" onClick={releaseHost}>Release host</button> : <button className="action-secondary" onClick={requestHost} disabled={hostRequestBusy || !connected}>{hostRequestBusy ? 'Requesting…' : 'Request host'}</button>}
           <SessionTimer /><ProfileMenu userName={userName} isHost={isHost} onLeave={() => { sessionStorage.clear(); navigate('/'); }} />
         </div>
       </header>
