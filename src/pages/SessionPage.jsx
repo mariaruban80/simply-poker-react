@@ -101,7 +101,7 @@ export default function SessionPage() {
           }));
         }
         if (type === 'restoreUserVote' && payload.storyId) {
-          setSelectedVote(payload.vote);
+          setSelectedVote((current) => active?.id === payload.storyId ? payload.vote : current);
         }
         if (type === 'votesRevealed' && payload.storyId) {
           setRevealedStories((old) => ({ ...old, [payload.storyId]: true }));
