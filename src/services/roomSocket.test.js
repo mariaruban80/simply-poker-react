@@ -1,19 +1,21 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mockSocket = {
-  connected: false,
-  id: 'socket-test-1',
-  handlers: {},
-  emitted: [],
-  on(event, handler) { this.handlers[event] = handler; return this; },
-  emit(event, payload, callback) {
-    this.emitted.push({ event, payload });
-    if (event === 'joinSession' && callback) callback({ isHost: true });
-    return this;
+const { mockSocket } = vi.hoisted(() => ({
+  mockSocket: {
+    connected: false,
+    id: 'socket-test-1',
+    handlers: {},
+    emitted: [],
+    on(event, handler) { this.handlers[event] = handler; return this; },
+    emit(event, payload, callback) {
+      this.emitted.push({ event, payload });
+      if (event === 'joinSession' && callback) callback({ isHost: true });
+      return this;
+    },
+    disconnect() { this.disconnected = true; },
+    trigger(event, payload) { this.handlers[event]?.(payload); },
   },
-  disconnect() { this.disconnected = true; },
-  trigger(event, payload) { this.handlers[event]?.(payload); },
-};
+}));
 
 vi.mock('socket.io-client', () => ({
   io: vi.fn(() => mockSocket),
@@ -22,6 +24,7 @@ vi.mock('socket.io-client', () => ({
 import { connectToRoom } from './roomSocket.js';
 
 afterEach(() => {
+  vi.unstubAllGlobals();
   mockSocket.handlers = {};
   mockSocket.emitted = [];
   mockSocket.connected = false;
@@ -31,6 +34,16 @@ afterEach(() => {
 });
 
 describe('room socket session lifecycle protocol', () => {
+  beforeEach(() => {
+    const values = new Map();
+    vi.stubGlobal('sessionStorage', {
+      getItem: (key) => values.has(key) ? values.get(key) : null,
+      setItem: (key, value) => values.set(key, String(value)),
+      clear: () => values.clear(),
+    });
+    vi.stubGlobal('window', {});
+  });
+
   it('joins the existing server session protocol and requests a full state resync', () => {
     sessionStorage.setItem('requestedHost', 'true');
     const onEvent = vi.fn();
