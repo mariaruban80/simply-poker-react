@@ -16,17 +16,27 @@ export function connectToRoom({ roomId, userName, onStatus, onEvent }) {
     'storyPointsUpdate', 'hostChanged', 'hostLeft', 'hostReleased', 'syncCSVData',
     'exportData', 'error',
   ];
+  events.forEach((eventName) => socket.on(eventName, (payload) => onEvent?.(eventName, payload || {})));
+
+  const joinSession = () => {
+    const requestedHost = sessionStorage.getItem('requestedHost') === 'true'
+      || sessionStorage.getItem('isRoomCreator') === 'true';
+    socket.emit('joinSession', { sessionId: roomId, requestedHost, name: userName }, (response = {}) => {
+      sessionStorage.setItem('isHost', String(Boolean(response.isHost)));
+      onEvent?.('joinSessionResult', response);
+      socket.emit('joinRoom', { roomId, userName });
+      socket.emit('requestAllTickets');
+      socket.emit('requestFullStateResync');
+      socket.emit('requestCurrentStory');
+    });
+  };
 
   socket.on('connect', () => {
     onStatus?.(true, 'Connected');
-    socket.emit('joinRoom', { roomId, userName });
-    socket.emit('requestAllTickets');
-    socket.emit('requestFullStateResync');
-    socket.emit('requestCurrentStory');
+    joinSession();
   });
   socket.on('disconnect', () => onStatus?.(false, 'Disconnected'));
   socket.on('connect_error', () => onStatus?.(false, 'Connection issue'));
-  events.forEach((eventName) => socket.on(eventName, (payload) => onEvent?.(eventName, payload || {})));
 
   return {
     disconnect: () => {
