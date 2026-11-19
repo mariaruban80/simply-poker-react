@@ -76,12 +76,12 @@ export function csvRowsToStories(rows) {
 
 export function escapeCsv(value) {
   const text = value == null ? '' : String(value);
-  return /[",\\r\\n\\t]/.test(text) || text.trim() !== text
+  return /[",\r\n\t]/.test(text) || text.trim() !== text
     ? `"${text.replace(/"/g, '""')}"`
     : text;
 }
 
 export function buildCsv(rows, includeHeader = true) {
   const dataRows = includeHeader ? rows : rows.slice(1);
-  return dataRows.map((row) => row.map(escapeCsv).join(',')).join('\\r\\n');
+  return dataRows.map((row) => row.map(escapeCsv).join(',')).join('\r\n');
 }
