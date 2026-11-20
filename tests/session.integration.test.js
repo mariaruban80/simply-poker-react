@@ -167,7 +167,9 @@ test('two participants can join, share stories, vote, reveal, reset and transfer
   await expectNoEvent(guest, 'votesRevealed', () => guest.emit('revealVotes', { storyId: story.id }));
   const revealed = waitForEvent(guest, 'votesRevealed', (payload) => payload.storyId === story.id);
   host.emit('revealVotes', { storyId: story.id });
-  assert.equal((await revealed).storyId, story.id);
+  const revealPayload = await revealed;
+  assert.equal(revealPayload.storyId, story.id);
+  assert.equal(revealPayload.points, '5');
 
   const reset = waitForEvent(guest, 'votesReset', (payload) => payload.storyId === story.id);
   host.emit('resetVotes', { storyId: story.id });
