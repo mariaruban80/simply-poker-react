@@ -83,6 +83,7 @@ export default function SessionPage() {
           sessionStorage.setItem('allowMemberManage', String(Boolean(payload.allowMemberManage)));
           const idx = Math.max(0, Math.min(Number(payload.selectedIndex) || 0, (payload.tickets || []).length - 1));
           setSelectedStory(idx);
+          setSelectedVote(null);
         }
         if (type === 'addTicket' && payload.ticketData) {
           setTickets((old) => old.some((item) => item.id === payload.ticketData.id) ? old : [...old, payload.ticketData]);
@@ -99,7 +100,10 @@ export default function SessionPage() {
           setVotesPerStory((old) => { const next = { ...old }; delete next[payload.storyId]; return next; });
           setRevealedStories((old) => { const next = { ...old }; delete next[payload.storyId]; return next; });
         }
-        if (type === 'storySelected') setSelectedStory(Math.max(0, Number(payload.storyIndex) || 0));
+        if (type === 'storySelected') {
+          setSelectedStory(Math.max(0, Number(payload.storyIndex) || 0));
+          setSelectedVote(null);
+        }
         if (type === 'storyVotes' && payload.storyId) {
           setVotesPerStory((old) => ({ ...old, [payload.storyId]: payload.votes || {} }));
         }
@@ -119,7 +123,7 @@ export default function SessionPage() {
         if (type === 'votesReset' && payload.storyId) {
           setRevealedStories((old) => ({ ...old, [payload.storyId]: false }));
           setVotesPerStory((old) => ({ ...old, [payload.storyId]: {} }));
-          setSelectedVote(null);
+          if (activeStoryIdRef.current === payload.storyId) setSelectedVote(null);
         }
         if (type === 'sessionPermissionsUpdate') {
           setAllowMemberManage(Boolean(payload.allowMemberManage));
