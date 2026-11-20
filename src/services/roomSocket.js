@@ -27,6 +27,9 @@ export function connectToRoom({ roomId, userName, onStatus, onEvent }) {
       socket.emit('joinRoom', { roomId, userName });
       socket.emit('requestAllTickets');
       socket.emit('requestFullStateResync');
+      if (response.isHost && sessionStorage.getItem('allowMemberManage') === 'true') {
+        socket.emit('setSessionPermissions', { allowMemberManage: true });
+      }
     });
   };
 
