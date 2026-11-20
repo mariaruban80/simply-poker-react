@@ -148,7 +148,7 @@ export default function LandingPage() {
                       <div className="connection-line" style={{ width: `${lineLength}px`, transform: `rotate(${angle}rad)` }} />
                       <div
                         className={`estimate-bubble${visibleEstimate === 'all' || visibleEstimate === index ? ' is-visible' : ''}`}
-                        style={{ left: `calc(50% + ${bubbleX}px - 20px)`, top: `calc(50% + ${bubbleY}px - 15px)` }}
+                        style={{ left: `calc(50% + ${bubbleX}px - 20px)`, top: `calc(50% + ${bubbleY}px - 15px)`, transitionDelay: visibleEstimate === 'all' ? `${index * 100}ms` : '0ms' }}
                         aria-hidden={visibleEstimate !== 'all' && visibleEstimate !== index}
                       >
                         {member.estimate}
