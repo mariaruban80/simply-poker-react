@@ -7,7 +7,7 @@ const LANGUAGES = [
   ['nl','Nederlands'],['sv','Svenska'],['da','Dansk'],['no','Norsk'],['fi','Suomi'],['pl','Polski'],['tr','Türkçe'],['th','ไทย']
 ];
 
-export function ProfileMenu({ userName, isHost, onLeave, onNotice }) {
+export function ProfileMenu({ userName, isHost, onLeave, onNotice, onToggleHost }) {
   const [open,setOpen]=useState(false);
   const [language,setLanguage]=useState(localStorage.getItem('selectedLanguage')||'en');
   const [showLanguages,setShowLanguages]=useState(false);
@@ -16,19 +16,20 @@ export function ProfileMenu({ userName, isHost, onLeave, onNotice }) {
     <button className="profile-trigger" onClick={()=>setOpen(v=>!v)} aria-expanded={open}><UserCircle size={19}/><span>{userName||'User'}</span></button>
     {open&&<div className="profile-dropdown">
       <strong>{userName||'User'}</strong><small>{isHost?'Session host':'Session participant'}</small>
-      <button onClick={()=>setShowLanguages(v=>!v)}>Language preference <span>{LANGUAGES.find(x=>x[0]===language)?.[1]||'English'}</span></button>
+      <button onClick={()=>setShowLanguages(v=>!v)}>Change language <span>{LANGUAGES.find(x=>x[0]===language)?.[1]||'English'}</span></button>
+      <button onClick={()=>{onToggleHost?.();setOpen(false);}}>Host mode <span>{isHost?'On':'Off'}</span></button>
       {showLanguages&&<div className="language-options">{LANGUAGES.map(([code,label])=><button key={code} className={language===code?'selected':''} onClick={()=>changeLanguage(code)}>{label}</button>)}</div>}
       <button className="profile-leave" onClick={onLeave}>Leave session</button>
     </div>}
   </div>;
 }
 
-export function SessionTimer() {
+export function SessionTimer({ onNotice }) {
   const [open,setOpen]=useState(false);
   const [minutes,setMinutes]=useState(10);
   const [seconds,setSeconds]=useState(600);
   const [running,setRunning]=useState(false);
-  useEffect(()=>{if(!running)return undefined;const id=window.setInterval(()=>setSeconds(s=>{if(s<=1){setRunning(false);return 0;}return s-1;}),1000);return()=>window.clearInterval(id);},[running]);
+  useEffect(()=>{if(!running)return undefined;const id=window.setInterval(()=>setSeconds(s=>{if(s<=1){setRunning(false);onNotice?.('Session timer finished.');return 0;}return s-1;}),1000);return()=>window.clearInterval(id);},[running,onNotice]);
   function start(){if(seconds===0)setSeconds(minutes*60);setRunning(true);}
   function reset(){setRunning(false);setSeconds(minutes*60);}
   const display=`${Math.floor(seconds/60).toString().padStart(2,'0')}:${(seconds%60).toString().padStart(2,'0')}`;
