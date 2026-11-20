@@ -19,7 +19,7 @@ const normaliseTickets = (value) => Array.isArray(value) ? value.filter((ticket)
 export default function SessionPage() {
   const { roomId } = useParams();
   const navigate = useNavigate();
-  const [userName, setUserName] = useState(() => sessionStorage.getItem('userName') || '');
+  const [userName, setUserName] = useState(() => sessionStorage.getItem(`simplyPoker:${roomId}:userName`) || '');
   const [inviteName, setInviteName] = useState('');
   const roomKey = (key) => `simplyPoker:${roomId}:${key}`;
   const [isHost, setIsHost] = useState(sessionStorage.getItem(`simplyPoker:${roomId}:isHost`) === 'true');
@@ -265,7 +265,7 @@ export default function SessionPage() {
 
   function changeScale(value) {
     setVotingSystem(value);
-    sessionStorage.setItem('votingSystem', value);
+    sessionStorage.setItem(roomKey('votingSystem'), value);
     window.roomSocket?.emit('votingSystemSelected', { roomId, votingSystem: value });
   }
 
@@ -291,7 +291,7 @@ export default function SessionPage() {
     if (!isHost) return;
     window.roomSocket?.emit('releaseHost', { sessionId: roomId });
     setIsHost(false);
-    sessionStorage.setItem('isHost', 'false');
+    sessionStorage.setItem(roomKey('isHost'), 'false');
     setNotice('You have released host access.');
   }
 
@@ -323,7 +323,7 @@ export default function SessionPage() {
     event.preventDefault();
     const name = inviteName.trim();
     if (!name) return;
-    sessionStorage.setItem('userName', name);
+    sessionStorage.setItem(roomKey('userName'), name);
     sessionStorage.setItem(roomKey('isHost'), 'false');
     sessionStorage.setItem(roomKey('requestedHost'), 'false');
     setUserName(name);
