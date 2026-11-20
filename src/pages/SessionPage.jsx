@@ -21,7 +21,8 @@ export default function SessionPage() {
   const navigate = useNavigate();
   const [userName, setUserName] = useState(() => sessionStorage.getItem('userName') || '');
   const [inviteName, setInviteName] = useState('');
-  const [isHost, setIsHost] = useState(sessionStorage.getItem('isHost') === 'true');
+  const roomKey = (key) => `simplyPoker:${roomId}:${key}`;
+  const [isHost, setIsHost] = useState(sessionStorage.getItem(`simplyPoker:${roomId}:isHost`) === 'true');
   const [connected, setConnected] = useState(false);
   const [status, setStatus] = useState('Connecting…');
   const [users, setUsers] = useState([]);
@@ -35,7 +36,7 @@ export default function SessionPage() {
   const [editingText, setEditingText] = useState('');
   const [editingStoryId, setEditingStoryId] = useState('');
   const [editingDescription, setEditingDescription] = useState('');
-  const [votingSystem, setVotingSystem] = useState(sessionStorage.getItem('votingSystem') || 'fibonacci');
+  const [votingSystem, setVotingSystem] = useState(sessionStorage.getItem(`simplyPoker:${roomId}:votingSystem`) || 'fibonacci');
   const [storyPoints, setStoryPoints] = useState({});
   const [notice, setNotice] = useState('');
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -45,7 +46,7 @@ export default function SessionPage() {
   const [hostRequestBusy, setHostRequestBusy] = useState(false);
   const [hostConflictOpen, setHostConflictOpen] = useState(false);
   const [storySearch, setStorySearch] = useState('');
-  const [allowMemberManage, setAllowMemberManage] = useState(sessionStorage.getItem('allowMemberManage') === 'true');
+  const [allowMemberManage, setAllowMemberManage] = useState(sessionStorage.getItem(`simplyPoker:${roomId}:allowMemberManage`) === 'true');
 
   const active = tickets[selectedStory];
   const activeStoryIdRef = useRef(active?.id);
@@ -76,7 +77,7 @@ export default function SessionPage() {
         if (type === 'userList') setUsers(Array.isArray(payload) ? payload : []);
         if (type === 'joinSessionResult') {
           setIsHost(Boolean(payload.isHost));
-          sessionStorage.setItem('isHost', String(Boolean(payload.isHost)));
+          sessionStorage.setItem(roomKey('isHost'), String(Boolean(payload.isHost)));
         }
         if (type === 'allTickets') setTickets(normaliseTickets(payload.tickets));
         if (type === 'resyncState') {
@@ -86,10 +87,10 @@ export default function SessionPage() {
           setStoryPoints(payload.storyPoints || {});
           if (payload.votingSystem) {
             setVotingSystem(payload.votingSystem);
-            sessionStorage.setItem('votingSystem', payload.votingSystem);
+            sessionStorage.setItem(roomKey('votingSystem'), payload.votingSystem);
           }
           setAllowMemberManage(Boolean(payload.allowMemberManage));
-          sessionStorage.setItem('allowMemberManage', String(Boolean(payload.allowMemberManage)));
+          sessionStorage.setItem(roomKey('allowMemberManage'), String(Boolean(payload.allowMemberManage)));
           const idx = Math.max(0, Math.min(Number(payload.selectedIndex) || 0, (payload.tickets || []).length - 1));
           setSelectedStory(idx);
           setSelectedVote(null);
@@ -293,7 +294,7 @@ export default function SessionPage() {
     setNotice('You have released host access.');
   }
 
-  const inviteLink = window.location.origin + '/session/' + roomId;
+  const inviteLink = window.location.origin + '/session/' + encodeURIComponent(roomId);
   async function copy() {
     try { await navigator.clipboard.writeText(inviteLink); setNotice('Invite link copied.'); setInviteOpen(false); }
     catch { setNotice('Copy was unavailable. Select and copy the invite link from the dialog.'); }
@@ -349,8 +350,8 @@ export default function SessionPage() {
     {notice&&<div className="legacy-notice" role="status">{notice}</div>}
     <main className="legacy-workspace">
       <aside className="legacy-sidebar"><h3>Current Members <span>{users.length}</span></h3><div className="legacy-members">{users.map((p,i)=><div className={`legacy-member ${votes[p.id]!==undefined?'voted':''}`} key={p.id||i}><span className="legacy-member-avatar">{(p.name||'?').slice(0,1).toUpperCase()}</span><span className="legacy-member-name">{p.name||'Member'}{p.id===window.roomSocket?.id?' (You)':''}</span><span className="legacy-member-vote">{revealed?String(votes[p.id]??''):(votes[p.id]!==undefined?'✓':'')}</span></div>)}{!users.length&&<p className="legacy-muted">Waiting for participants…</p>}</div>
-      {isHost&&<div className="legacy-controls"><button onClick={reveal} disabled={!active||revealed}>Reveal Votes</button><button onClick={reset} disabled={!active}>Reset Votes</button><label><input type="checkbox" checked={allowMemberManage} onChange={e=>{const value=e.target.checked;setAllowMemberManage(value);sessionStorage.setItem('allowMemberManage',String(value));window.roomSocket?.emit('setSessionPermissions',{allowMemberManage:value});}}/> Allow members to manage stories</label></div>}
-      <div className="legacy-session-id"><small>SESSION ID</small><strong>{roomId}</strong><button onClick={copy}><Copy size={13}/> Copy invite link</button></div></aside>
+      {isHost&&<div className="legacy-controls"><button onClick={reveal} disabled={!active||revealed}>Reveal Votes</button><button onClick={reset} disabled={!active}>Reset Votes</button><label><input type="checkbox" checked={allowMemberManage} onChange={e=>{const value=e.target.checked;setAllowMemberManage(value);sessionStorage.setItem(roomKey('allowMemberManage'),String(value));window.roomSocket?.emit('setSessionPermissions',{allowMemberManage:value});}}/> Allow members to manage stories</label></div>}
+</aside>
       <section className="legacy-main">
         <div className="legacy-current-story"><div className="legacy-current-heading"><span>CURRENT STORY</span><span>{active?`Story ${selectedStory+1} of ${tickets.length}`:'No story selected'}</span></div>{active?<><h2>{active.idDisplay&&<b>{active.idDisplay}: </b>}{active.text||active.title||'Untitled story'}</h2>{active.descriptionDisplay&&<div className="legacy-story-description" dangerouslySetInnerHTML={{__html:sanitiseRichText(active.descriptionDisplay)}}/>}<div className="legacy-story-points">Story points: <strong>{storyPoints[active.id]??active.points??'?'}</strong></div>{canManage&&<div className="legacy-story-tools"><button onClick={()=>{startEdit(active);}}><Pencil size={14}/> Edit</button><button onClick={()=>deleteStory(active)}><Trash2 size={14}/> Delete</button><label>Points <input defaultValue={storyPoints[active.id]??active.points??'?'} onBlur={e=>updatePoints(active,e.target.value)} onKeyDown={e=>{if(e.key==='Enter')e.currentTarget.blur();}}/></label></div>}</>:<div className="legacy-empty">No stories available. Please add stories to start voting.</div>}</div>
         <div className="legacy-user-circle"><div className="legacy-poker-table" aria-label="Planning poker table"><div className="legacy-table-members">{users.map((p,i)=><div className="legacy-table-person" key={p.id||i} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();const dragged=e.dataTransfer.getData('text/plain');if(p.id===window.roomSocket?.id&&dragged)vote(dragged,p.id);else setNotice('You can only place your vote in your own space.');}}><span className={`legacy-table-avatar ${votes[p.id]!==undefined?'has-voted':''}`}>{(p.name||'?').slice(0,1).toUpperCase()}</span><span className="legacy-table-name">{p.name||'Member'}{p.id===window.roomSocket?.id?' (You)':''}</span><div className={`legacy-vote-space ${votes[p.id]!==undefined?'has-vote':''} ${revealed?'revealed':''}`} aria-label={revealed?`Vote ${votes[p.id]??'not submitted'}`:votes[p.id]!==undefined?'Vote submitted':'No vote yet'}>{revealed?String(votes[p.id]??'—'):votes[p.id]!==undefined?'✓':''}</div></div>)}</div></div></div>
