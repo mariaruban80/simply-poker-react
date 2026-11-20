@@ -24,10 +24,24 @@ export function connectToRoom({ roomId, userName, onStatus, onEvent }) {
     socket.emit('joinSession', { sessionId: roomId, requestedHost, name: userName }, (response = {}) => {
       sessionStorage.setItem('isHost', String(Boolean(response.isHost)));
       onEvent?.('joinSessionResult', response);
+      if (response.votingSystem) {
+        sessionStorage.setItem('votingSystem', response.votingSystem);
+        onEvent?.('votingSystemUpdate', { votingSystem: response.votingSystem });
+      }
+      if (response.allowMemberManage !== null && response.allowMemberManage !== undefined) {
+        sessionStorage.setItem('allowMemberManage', String(Boolean(response.allowMemberManage)));
+        onEvent?.('sessionPermissionsUpdate', { allowMemberManage: Boolean(response.allowMemberManage) });
+      }
       socket.emit('joinRoom', { roomId, userName });
       socket.emit('requestAllTickets');
       socket.emit('requestFullStateResync');
-      if (response.isHost && sessionStorage.getItem('allowMemberManage') === 'true') {
+      if (response.isHost && !response.votingSystem) {
+        socket.emit('votingSystemSelected', {
+          roomId,
+          votingSystem: sessionStorage.getItem('votingSystem') || 'fibonacci',
+        });
+      }
+      if (response.isHost && sessionStorage.getItem('allowMemberManage') === 'true' && response.allowMemberManage !== true) {
         socket.emit('setSessionPermissions', { allowMemberManage: true });
       }
     });
