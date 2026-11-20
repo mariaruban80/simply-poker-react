@@ -17,14 +17,15 @@ const io = new Server(httpServer, {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-// added to call the main.html file
-app.use(express.static(join(__dirname, 'dist')));
-app.use(express.static(join(__dirname, 'public')));
+// Serve the original About experience as the public homepage while keeping
+// the migrated React application available at /start and /session routes.
+app.use(express.static(join(__dirname, 'dist'), { index: false }));
 app.get('/', (req, res) => {
-  const reactEntry = join(__dirname, 'dist', 'index.html');
-  if (existsSync(reactEntry)) return res.sendFile(reactEntry);
-  return res.sendFile(join(__dirname, 'public', 'About.html'));
+  const aboutPage = join(__dirname, 'public', 'About.html');
+  if (existsSync(aboutPage)) return res.sendFile(aboutPage);
+  return res.sendFile(join(__dirname, 'dist', 'index.html'));
 });
+app.use(express.static(join(__dirname, 'public')));
 
 // import fetch from 'node-fetch';  // <-- added for JIRA proxy support
 
