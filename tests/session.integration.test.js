@@ -143,6 +143,9 @@ test('two participants can join, share stories, vote, reveal, reset and transfer
   });
   assert.equal((await voteReceived).vote, '5');
 
+  const permissionRevoked = waitForEvent(guest, 'sessionPermissionsUpdate');
+  host.emit('setSessionPermissions', { allowMemberManage: false });
+  assert.equal((await permissionRevoked).allowMemberManage, false);
   await expectNoEvent(guest, 'votesRevealed', () => guest.emit('revealVotes', { storyId: story.id }));
   const revealed = waitForEvent(guest, 'votesRevealed', (payload) => payload.storyId === story.id);
   host.emit('revealVotes', { storyId: story.id });
