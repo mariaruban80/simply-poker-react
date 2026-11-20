@@ -1196,7 +1196,8 @@ socket.on('restoreUserVote', ({ storyId, vote }) => {
       tickets: filteredTickets,
       votesPerStory: activeVotes,
       votesRevealed: activeRevealed,
-      deletedStoryIds: Array.from(rooms[roomId].deletedStoryIds)
+      deletedStoryIds: Array.from(rooms[roomId].deletedStoryIds),
+      allowMemberManage: Boolean(rooms[roomId].allowMemberManage)
     });
 
     // Send selected story index
@@ -1394,6 +1395,17 @@ socket.on('restoreUserVote', ({ storyId, vote }) => {
     }
   });
   
+  // Host-controlled room permission for shared story management.
+  socket.on('setSessionPermissions', ({ allowMemberManage }) => {
+    const roomId = socket.data.roomId;
+    if (!roomId || !rooms[roomId] || sessionHosts.get(roomId) !== socket.id) return;
+    rooms[roomId].allowMemberManage = Boolean(allowMemberManage);
+    rooms[roomId].lastActivity = Date.now();
+    io.to(roomId).emit('sessionPermissionsUpdate', {
+      allowMemberManage: rooms[roomId].allowMemberManage
+    });
+  });
+
   // Handle ticket synchronization
 socket.on('addTicket', (ticketData) => {
   const roomId = socket.data.roomId;
