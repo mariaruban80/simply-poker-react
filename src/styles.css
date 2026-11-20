@@ -464,3 +464,19 @@
  .legacy-session .legacy-host-modal .legacy-modal-actions{flex-direction:column}
  .legacy-session .legacy-host-modal .legacy-modal-actions button{width:100%}
 }
+
+/* Quill-like lightweight rich text editor for ticket descriptions */
+.legacy-session .legacy-rich-editor{width:100%;border:1px solid #ded8e8;border-radius:8px;overflow:hidden;background:#fff}
+.legacy-session .legacy-rich-toolbar{display:flex;align-items:center;gap:3px;flex-wrap:wrap;padding:7px 8px;border-bottom:1px solid #e9e4ef;background:#faf9fc}
+.legacy-session .legacy-rich-toolbar button{width:30px;height:29px;display:grid;place-items:center;border:0;border-radius:5px;background:transparent;color:#665579}
+.legacy-session .legacy-rich-toolbar button:hover,.legacy-session .legacy-rich-toolbar button:focus-visible{background:#eee7f8;color:#512da8;outline:none}
+.legacy-session .legacy-rich-toolbar span{height:19px;width:1px;background:#ded8e8;margin:0 4px}
+.legacy-session .legacy-rich-content{min-height:135px;max-height:280px;overflow:auto;padding:12px 13px;color:#383143;font-size:13px;line-height:1.6;outline:none;text-align:left}
+.legacy-session .legacy-rich-content:empty:before{content:attr(data-placeholder);color:#aaa4b2;pointer-events:none}
+.legacy-session .legacy-rich-content p{margin:0 0 8px}
+.legacy-session .legacy-rich-content ul,.legacy-session .legacy-rich-content ol{padding-left:22px}
+.legacy-session .legacy-rich-content blockquote{margin:8px 0;padding-left:12px;border-left:3px solid #c8b5e5;color:#71677d}
+.legacy-session .legacy-story-description{font-size:13px;line-height:1.65;color:#6e6878;overflow-wrap:anywhere}
+.legacy-session .legacy-story-description p{margin:6px 0}
+.legacy-session .legacy-story-description ul,.legacy-session .legacy-story-description ol{padding-left:22px}
+@media(max-width:700px){.legacy-session .legacy-rich-content{min-height:115px;max-height:220px}.legacy-session .legacy-rich-toolbar{gap:2px;padding:6px}}
