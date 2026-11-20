@@ -527,3 +527,14 @@
 .legacy-session .profile-dropdown{overscroll-behavior:contain}
 .legacy-session .profile-dropdown button:focus-visible{outline:2px solid #bda6dc;outline-offset:1px}
 @media(max-width:700px){.legacy-session .legacy-invite{height:36px;padding:0 10px;font-size:11px;border-radius:9px}.legacy-session .legacy-modal[aria-labelledby="invite-title"] .legacy-modal-actions{flex-direction:row}}
+
+
+/* Subtle session layout refinement: bring all three workspace panels upward */
+@media(min-width:701px){
+ .legacy-workspace{margin-top:0}
+ .legacy-sidebar,.legacy-main,.legacy-rightbar{padding-top:12px}
+ .legacy-current-story{margin-top:0}
+}
+@media(max-width:700px){
+ .legacy-sidebar,.legacy-main,.legacy-rightbar{padding-top:14px}
+}
