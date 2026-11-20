@@ -60,7 +60,7 @@ export function ProfileMenu({ userName, isHost, onLeave, onNotice, onToggleHost 
   const [pendingLanguage,setPendingLanguage]=useState('en');
   const [showLanguages,setShowLanguages]=useState(false);
   const [translating,setTranslating]=useState(false);
-  useEffect(()=>{const saved=localStorage.getItem('selectedLanguage')||'en';setLanguage(saved);setPendingLanguage(saved);if(saved!=='en')applyInterfaceLanguage(saved);},[]);
+  useEffect(()=>{localStorage.setItem('selectedLanguage','en');setLanguage('en');setPendingLanguage('en');},[]);
   async function applyLanguage(){
     setTranslating(true);
     try {
@@ -73,7 +73,7 @@ export function ProfileMenu({ userName, isHost, onLeave, onNotice, onToggleHost 
     finally { setTranslating(false); }
   }
   return <div className="profile-tools">
-    <button className="profile-trigger" onClick={()=>setOpen(v=>!v)} aria-expanded={open}><UserCircle size={19}/><span>{userName||'User'}</span></button>
+    <button className="profile-trigger" onClick={()=>setOpen(v=>!v)} aria-expanded={open} aria-label={`Profile menu for ${userName||'User'}`}><span className="legacy-avatar">{(userName||'U').slice(0,1).toUpperCase()}</span><span className="profile-trigger-name">{userName||'User'}</span><span className="profile-trigger-chevron">⌄</span></button>
     {open&&<div className="profile-dropdown">
       <div className="profile-menu-heading"><span className="profile-menu-avatar">{(userName||'U').slice(0,1).toUpperCase()}</span><span><strong>{userName||'User'}</strong><small>{isHost?'Session host':'Session participant'}</small></span></div>
       <button onClick={()=>setShowLanguages(v=>!v)}><span>🇬🇧 Change language</span><span>{LANGUAGES.find(x=>x[0]===language)?.[1]||'English'}</span></button>
