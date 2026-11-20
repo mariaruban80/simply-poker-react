@@ -74,6 +74,11 @@ export default function SessionPage() {
           setTickets(normaliseTickets(payload.tickets));
           setVotesPerStory(payload.votesPerStory || {});
           setRevealedStories(payload.votesRevealed || {});
+          setStoryPoints(payload.storyPoints || {});
+          if (payload.votingSystem) {
+            setVotingSystem(payload.votingSystem);
+            sessionStorage.setItem('votingSystem', payload.votingSystem);
+          }
           setAllowMemberManage(Boolean(payload.allowMemberManage));
           sessionStorage.setItem('allowMemberManage', String(Boolean(payload.allowMemberManage)));
           const idx = Math.max(0, Math.min(Number(payload.selectedIndex) || 0, (payload.tickets || []).length - 1));
