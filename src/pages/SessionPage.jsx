@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { CheckCircle2, Copy, Eye, Pencil, Plus, RotateCcw, Spade, Trash2, Users, Wifi, WifiOff } from 'lucide-react';
+import { Copy, Pencil, Trash2, Wifi, WifiOff, X, Link2 } from 'lucide-react';
 import { connectToRoom } from '../services/roomSocket.js';
 import DataImportExport from '../components/DataImportExport.jsx';
 import { ProfileMenu, SessionTimer, FeedbackWidget } from '../components/SessionTools.jsx';
@@ -34,6 +34,10 @@ export default function SessionPage() {
   const [votingSystem, setVotingSystem] = useState(sessionStorage.getItem('votingSystem') || 'fibonacci');
   const [storyPoints, setStoryPoints] = useState({});
   const [notice, setNotice] = useState('');
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [addStoryOpen, setAddStoryOpen] = useState(false);
+  const [newStoryId, setNewStoryId] = useState('');
+  const [newStoryDescription, setNewStoryDescription] = useState('');
   const [hostRequestBusy, setHostRequestBusy] = useState(false);
   const [storySearch, setStorySearch] = useState('');
   const [allowMemberManage, setAllowMemberManage] = useState(sessionStorage.getItem('allowMemberManage') === 'true');
@@ -172,13 +176,18 @@ export default function SessionPage() {
 
   function addStory(event) {
     event.preventDefault();
-    const text = newTicket.trim();
-    if (!text || !canManage) return;
-    const ticketData = { id: `story_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, text, points: '?' };
+    const summary = newTicket.trim();
+    if (!summary || !canManage) return;
+    const ticketData = {
+      id: 'story_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+      text: summary, title: summary, idDisplay: newStoryId.trim(),
+      descriptionDisplay: newStoryDescription.trim(), originalText: summary,
+      originalLang: 'en', points: '?',
+    };
     window.roomSocket?.emit('addTicket', ticketData);
     setTickets((old) => old.some((item) => item.id === ticketData.id) ? old : [...old, ticketData]);
-    setNewTicket('');
-    setNotice('Story added.');
+    setNewTicket(''); setNewStoryId(''); setNewStoryDescription('');
+    setAddStoryOpen(false); setNotice('Story added.');
   }
 
   function vote(value) {
@@ -212,10 +221,13 @@ export default function SessionPage() {
   }
 
   function deleteStory(ticket) {
-    if (!window.confirm(`Delete “${ticket.text || ticket.id}” from this session?`)) return;
+    if (!window.confirm('Delete “' + (ticket.text || ticket.id) + '” from this session?')) return;
+    const deletedIndex = tickets.findIndex((item) => item.id === ticket.id);
     window.roomSocket?.emit('deleteStory', { storyId: ticket.id });
-    setTickets((old) => old.filter((item) => item.id !== ticket.id));
-    setSelectedStory((index) => Math.max(0, Math.min(index, tickets.length - 2)));
+    const next = tickets.filter((item) => item.id !== ticket.id);
+    setTickets(next);
+    setSelectedStory((index) => !next.length ? 0 : deletedIndex < index ? index - 1 : deletedIndex === index ? Math.min(index, next.length - 1) : index);
+    setSelectedVote(null);
   }
 
   function updatePoints(ticket, value) {
@@ -256,10 +268,10 @@ export default function SessionPage() {
     setNotice('You have released host access.');
   }
 
+  const inviteLink = window.location.origin + '/session/' + roomId;
   async function copy() {
-    const link = `${window.location.origin}/session/${roomId}`;
-    try { await navigator.clipboard.writeText(link); setNotice('Invite link copied.'); }
-    catch { setNotice(`Share session ID: ${roomId}`); }
+    try { await navigator.clipboard.writeText(inviteLink); setNotice('Invite link copied.'); setInviteOpen(false); }
+    catch { setNotice('Copy was unavailable. Select and copy the invite link from the dialog.'); }
   }
 
   const visibleVotes = Object.entries(votes).map(([id, value]) => {
@@ -283,7 +295,7 @@ export default function SessionPage() {
   return <div className="legacy-session">
     <header className="legacy-header">
       <a className="legacy-logo" href="/"><img src="/assets/about/spade_1.png" alt=""/> <span>Simply Poker</span></a>
-      <div className="legacy-nav"><span className={`legacy-connection ${connected?'online':'offline'}`}>{connected?<Wifi size={13}/>:<WifiOff size={13}/>} {status}</span><button className="legacy-invite" onClick={copy}><Copy size={15}/> Invite Others</button><div className="legacy-user"><span className="legacy-avatar">{(userName||'U').slice(0,1).toUpperCase()}</span>{userName||'User'}</div><SessionTimer/><ProfileMenu userName={userName} isHost={isHost} onNotice={setNotice} onLeave={()=>{sessionStorage.clear();navigate('/');}}/></div>
+      <div className="legacy-nav"><span className={`legacy-connection ${connected?'online':'offline'}`}>{connected?<Wifi size={13}/>:<WifiOff size={13}/>} {status}</span><button className="legacy-invite" onClick={()=>setInviteOpen(true)}><Link2 size={15}/> Invite Others</button><div className="legacy-user"><span className="legacy-avatar">{(userName||'U').slice(0,1).toUpperCase()}</span>{userName||'User'}</div><SessionTimer/><ProfileMenu userName={userName} isHost={isHost} onNotice={setNotice} onLeave={()=>{sessionStorage.clear();navigate('/');}}/></div>
     </header>
     <div className="legacy-session-toolbar"><div className="legacy-room-label"><small>ROOM</small><strong>{roomId}</strong></div><div className="legacy-toolbar-actions">{isHost?<button onClick={releaseHost}>Release host</button>:<button onClick={requestHost} disabled={hostRequestBusy||!connected}>{hostRequestBusy?'Requesting…':'Become host'}</button>}<DataImportExport canManage={canManage} tickets={tickets} votesPerStory={votesPerStory} revealedStories={revealedStories} onImportStories={importStories} onNotice={setNotice}/></div></div>
     {notice&&<div className="legacy-notice" role="status">{notice}</div>}
@@ -297,7 +309,10 @@ export default function SessionPage() {
         <section className="legacy-planning-cards"><h3>Planning Cards</h3><div className="legacy-cards">{isHost&&<select value={votingSystem} onChange={e=>changeScale(e.target.value)}><option value="fibonacci">Fibonacci</option><option value="shortFib">Short Fibonacci</option><option value="tshirt">T-Shirt sizes</option><option value="tshirtNum">T-Shirt + numbers</option><option value="custom">Custom</option></select>}{cards.map(card=><button key={card} className={`legacy-card ${selectedVote===card?'selected':''}`} onClick={()=>vote(card)} disabled={!active||revealed}>{card}</button>)}</div>{selectedVote!==null&&<small className="legacy-vote-confirmation">Your vote has been submitted</small>}</section>
         {revealed&&<section className="legacy-results"><h3>Voting results</h3><div className="legacy-result-stats"><span>Votes <b>{visibleVotes.length}</b></span><span>Most common <b>{mostCommonVote}</b></span><span>Average <b>{averageVote}</b></span><span>Agreement <b>{agreement}%</b></span></div><div className="legacy-result-votes">{visibleVotes.map(v=><span key={v.id}>{v.name}: <b>{String(v.value)}</b></span>)}</div></section>}
       </section>
-      <aside className="legacy-rightbar"><div className="legacy-search"><input type="search" value={storySearch} onChange={e=>setStorySearch(e.target.value)} placeholder="Search and filter tickets…"/><span>⌕</span></div>{canManage&&<button className="legacy-add-ticket" onClick={()=>{setEditingId('new');setEditingText('');}}><span>+</span> ADD TICKET</button>}{editingId==='new'&&<form className="legacy-new-ticket" onSubmit={e=>{e.preventDefault();const value=editingText.trim();if(!value)return;const ticketData={id:`story_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,text:value,points:'?'};window.roomSocket?.emit('addTicket',ticketData);setTickets(old=>[...old,ticketData]);setEditingText('');setEditingId(null);}}><input autoFocus value={editingText} onChange={e=>setEditingText(e.target.value)} placeholder="Ticket title"/><button>Add</button><button type="button" onClick={()=>setEditingId(null)}>×</button></form>}<div className="legacy-story-list">{tickets.map((ticket,index)=>({ticket,index})).filter(({ticket})=>`${ticket.text||ticket.title||''} ${ticket.idDisplay||''}`.toLowerCase().includes(storySearch.toLowerCase())).map(({ticket,index})=><article key={ticket.id} className={`legacy-story-card ${index===selectedStory?'active':''}`} onClick={()=>selectStory(index)} onKeyDown={e=>{if(e.key==='Enter')selectStory(index);}} role="button" tabIndex={0}>{ticket.idDisplay&&<span className="legacy-story-id">{ticket.idDisplay}</span>}<div className="legacy-story-title">{ticket.text||ticket.title||'Untitled story'}</div><div className="legacy-story-meta"><span>👥 {Object.keys(votesPerStory[ticket.id]||{}).length} votes</span><strong>{storyPoints[ticket.id]??ticket.points??'?'}</strong></div>{canManage&&<div className="legacy-card-actions"><button onClick={e=>{e.stopPropagation();setEditingId(ticket.id);setEditingText(ticket.text||'');}} aria-label="Edit"><Pencil size={13}/></button><button onClick={e=>{e.stopPropagation();deleteStory(ticket);}} aria-label="Delete"><Trash2 size={13}/></button></div>}</article>)}{!tickets.length&&<p className="legacy-muted">No stories have been added yet.</p>}</div><div className="legacy-navigation"><button onClick={()=>selectStory(selectedStory-1)} disabled={selectedStory<=0}>Previous Story</button><button onClick={()=>selectStory(selectedStory+1)} disabled={selectedStory>=tickets.length-1}>Next Story</button></div></aside>
-    </main><FeedbackWidget/>
+      <aside className="legacy-rightbar"><div className="legacy-search"><input type="search" value={storySearch} onChange={e=>setStorySearch(e.target.value)} placeholder="Search and filter tickets…"/><span>⌕</span></div>{canManage&&<button className="legacy-add-ticket" onClick={()=>setAddStoryOpen(true)}><span>+</span> ADD TICKET</button>}<div className="legacy-story-list">{tickets.map((ticket,index)=>({ticket,index})).filter(({ticket})=>`${ticket.text||ticket.title||''} ${ticket.idDisplay||''}`.toLowerCase().includes(storySearch.toLowerCase())).map(({ticket,index})=><article key={ticket.id} className={`legacy-story-card ${index===selectedStory?'active':''}`} onClick={()=>selectStory(index)} onKeyDown={e=>{if(e.key==='Enter')selectStory(index);}} role="button" tabIndex={0}>{ticket.idDisplay&&<span className="legacy-story-id">{ticket.idDisplay}</span>}<div className="legacy-story-title">{ticket.text||ticket.title||'Untitled story'}</div><div className="legacy-story-meta"><span>👥 {Object.keys(votesPerStory[ticket.id]||{}).length} votes</span><strong>{storyPoints[ticket.id]??ticket.points??'?'}</strong></div>{canManage&&<div className="legacy-card-actions"><button onClick={e=>{e.stopPropagation();setEditingId(ticket.id);setEditingText(ticket.text||'');}} aria-label="Edit"><Pencil size={13}/></button><button onClick={e=>{e.stopPropagation();deleteStory(ticket);}} aria-label="Delete"><Trash2 size={13}/></button></div>}</article>)}{!tickets.length&&<p className="legacy-muted">No stories have been added yet.</p>}</div><div className="legacy-navigation"><button onClick={()=>selectStory(selectedStory-1)} disabled={selectedStory<=0}>Previous Story</button><button onClick={()=>selectStory(selectedStory+1)} disabled={selectedStory>=tickets.length-1}>Next Story</button></div></aside>
+    </main>
+    {inviteOpen&&<div className="legacy-modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setInviteOpen(false);}}><section className="legacy-modal" role="dialog" aria-modal="true" aria-labelledby="invite-title"><button className="legacy-modal-close" onClick={()=>setInviteOpen(false)} aria-label="Close"><X size={18}/></button><h2 id="invite-title">Invite team members</h2><p>Share this link so others can join your Planning Poker session.</p><label className="legacy-modal-field">Session invite link<input readOnly value={inviteLink} onFocus={e=>e.target.select()}/></label><div className="legacy-modal-actions"><button className="legacy-secondary" onClick={()=>setInviteOpen(false)}>Close</button><button className="legacy-primary" onClick={copy}><Copy size={15}/> Copy link</button></div></section></div>}
+    {addStoryOpen&&<div className="legacy-modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setAddStoryOpen(false);}}><section className="legacy-modal legacy-add-modal" role="dialog" aria-modal="true" aria-labelledby="add-story-title"><button className="legacy-modal-close" onClick={()=>setAddStoryOpen(false)} aria-label="Close"><X size={18}/></button><h2 id="add-story-title">Add New Ticket</h2><form onSubmit={addStory}><label className="legacy-modal-field">Story ID (optional)<input value={newStoryId} onChange={e=>setNewStoryId(e.target.value)} placeholder="e.g. PROJ-123"/></label><label className="legacy-modal-field">Summary<input autoFocus required value={newTicket} onChange={e=>setNewTicket(e.target.value)} placeholder="Enter story summary"/></label><label className="legacy-modal-field">Description / Comment<textarea rows={5} value={newStoryDescription} onChange={e=>setNewStoryDescription(e.target.value)} placeholder="Add story details or acceptance notes…"/></label><div className="legacy-modal-actions"><button type="button" className="legacy-secondary" onClick={()=>setAddStoryOpen(false)}>Cancel</button><button type="submit" className="legacy-primary">+ Add ticket</button></div></form></section></div>}
+    <FeedbackWidget/>
   </div>;
 }
