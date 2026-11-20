@@ -302,7 +302,7 @@ export default function SessionPage() {
             </> : <div className="empty-state"><div className="empty-icon"><Spade size={25} /></div><h2>No stories added yet</h2><p>{canManage ? 'Add a story to start estimating with your team.' : 'Waiting for the host to add a story.'}</p></div>}
             {tickets.length > 0 && <div className="story-navigation"><button disabled={selectedStory === 0} onClick={() => selectStory(selectedStory - 1)}>Previous</button><button disabled={selectedStory >= tickets.length - 1} onClick={() => selectStory(selectedStory + 1)}>Next story</button></div>}
           </section>
-          {canManage && <DataImportExport isHost={isHost} tickets={tickets} votesPerStory={votesPerStory} revealedStories={revealedStories} onImportStories={importStories} onNotice={setNotice} />}
+          {canManage && <DataImportExport isHost={canManage} tickets={tickets} votesPerStory={votesPerStory} revealedStories={revealedStories} onImportStories={importStories} onNotice={setNotice} />}
           {canManage && <form className="add-story-form" onSubmit={addStory}><input value={newTicket} onChange={(event) => setNewTicket(event.target.value)} placeholder="Add a story or ticket title…" aria-label="New story title" /><button type="submit"><Plus size={15} /> Add story</button></form>}
           <section className="voting-panel">
             <div className="voting-heading"><div><h2>Your estimate</h2><p>{revealed ? 'Voting is revealed. Reset to vote again.' : 'Choose a card that reflects the effort involved.'}</p></div>{selectedVote !== null && <span className="vote-confirmation">Vote submitted</span>}</div>
