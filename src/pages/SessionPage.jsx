@@ -298,8 +298,14 @@ export default function SessionPage() {
 
   const inviteLink = window.location.origin + '/session/' + encodeURIComponent(roomId) + '?invite=1';
   async function copy() {
-    try { await navigator.clipboard.writeText(inviteLink); setInviteCopied(true); setNotice('Invite link copied.'); }
-    catch { setNotice('Copy was unavailable. Select and copy the invite link from the dialog.'); }
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      setInviteCopied(true);
+      setInviteOpen(false);
+      setNotice('Invite link copied.');
+    } catch {
+      setNotice('Copy was unavailable. Select and copy the invite link from the dialog.');
+    }
   }
 
   const visibleVotes = Object.entries(votes).map(([id, value]) => {
@@ -333,8 +339,8 @@ export default function SessionPage() {
   if (!userName) return <div className="legacy-session legacy-invite-join">
     <div className="legacy-invite-join-card">
       <img src="/assets/about/spade_1.png" alt="" />
-      <h1>Join Planning Poker session</h1>
-      <p>You've been invited to join session <strong>{roomId}</strong>. Enter your name to connect with the team.</p>
+      <h1>Join Simply Poker session</h1>
+      <p>You've been invited to join Simply Poker session <strong>{roomId}</strong>. Enter your name to connect with the team.</p>
       <form onSubmit={joinFromInvite}>
         <label htmlFor="invite-join-name">Your name</label>
         <input id="invite-join-name" autoFocus value={inviteName} onChange={event=>setInviteName(event.target.value)} placeholder="Enter your name" maxLength={40} required />
@@ -348,7 +354,7 @@ export default function SessionPage() {
       <a className="legacy-logo" href="/"><img src="/assets/about/spade_1.png" alt=""/> <span>Simply Poker</span></a>
       <div className="legacy-nav"><span className={`legacy-connection ${connected?'online':'offline'}`}>{connected?<Wifi size={13}/>:<WifiOff size={13}/>} {status}</span><button className="legacy-invite" onClick={()=>{setInviteCopied(false);setInviteOpen(true);}}><Link2 size={15}/> Invite Others</button><div className="legacy-user"><span className="legacy-avatar">{(userName||'U').slice(0,1).toUpperCase()}</span>{userName||'User'}</div><SessionTimer onNotice={setNotice}/><ProfileMenu userName={userName} isHost={isHost} onNotice={setNotice} onToggleHost={()=>isHost?releaseHost():requestHost()} onLeave={()=>{sessionStorage.clear();navigate('/');}}/></div>
     </header>
-    <div className="legacy-session-toolbar"><div className="legacy-room-label"><small>ROOM</small><strong>{roomId}</strong></div><DataImportExport canManage={isHost} tickets={tickets} votesPerStory={votesPerStory} revealedStories={revealedStories} onImportStories={importStories} onNotice={setNotice} showToolbar={false}/></div>
+    <div className="legacy-session-toolbar"><DataImportExport canManage={isHost} tickets={tickets} votesPerStory={votesPerStory} revealedStories={revealedStories} onImportStories={importStories} onNotice={setNotice} showToolbar={false}/></div>
     {notice&&<div className="legacy-notice" role="status">{notice}</div>}
     <main className="legacy-workspace">
       <aside className="legacy-sidebar"><h3>Current Members <span>{users.length}</span></h3><div className="legacy-members">{users.map((p,i)=><div className={`legacy-member ${votes[p.id]!==undefined?'voted':''}`} key={p.id||i}><span className="legacy-member-avatar">{(p.name||'?').slice(0,1).toUpperCase()}</span><span className="legacy-member-name">{p.name||'Member'}{p.id===window.roomSocket?.id?' (You)':''}</span><span className="legacy-member-vote">{revealed?String(votes[p.id]??''):(votes[p.id]!==undefined?'✓':'')}</span></div>)}{!users.length&&<p className="legacy-muted">Waiting for participants…</p>}</div>
