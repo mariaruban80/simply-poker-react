@@ -5,6 +5,7 @@ import { connectToRoom } from '../services/roomSocket.js';
 import DataImportExport from '../components/DataImportExport.jsx';
 import RichTextEditor, { sanitiseRichText } from '../components/RichTextEditor.jsx';
 import { ProfileMenu, SessionTimer, FeedbackWidget } from '../components/SessionTools.jsx';
+import { PUBLIC_APP_URL } from '../services/api.js';
 
 const scales = {
   fibonacci: ['0', '1', '2', '3', '5', '8', '13', '21'],
@@ -296,7 +297,7 @@ export default function SessionPage() {
     setNotice('You have released host access.');
   }
 
-  const inviteLink = window.location.origin + '/session/' + encodeURIComponent(roomId) + '?invite=1';
+  const inviteLink = (PUBLIC_APP_URL || window.location.origin) + '/session/' + encodeURIComponent(roomId) + '?invite=1';
   async function copy() {
     try {
       await navigator.clipboard.writeText(inviteLink);
