@@ -130,10 +130,10 @@ test('two participants can join, share stories, vote, reveal, reset and transfer
   host.emit('votingSystemSelected', { roomId, votingSystem: 'tshirt' });
   assert.equal((await scaleChanged).votingSystem, 'tshirt');
 
-  const story = { id: 'story-e2e-1', text: 'Integration test story', points: '?' };
+  const story = { id: 'story-e2e-1', idDisplay: 'APP-42', text: 'Integration test story', descriptionDisplay: '<p>Imported acceptance criteria</p>', points: '5', jiraUrl: 'https://example.atlassian.net/browse/APP-42' };
   const storyAdded = waitForEvent(host, 'addTicket', (payload) => payload.ticketData?.id === story.id);
   guest.emit('addTicket', story);
-  assert.equal((await storyAdded).ticketData.text, story.text);
+  const addedPayload = (await storyAdded).ticketData;\n  assert.equal(addedPayload.text, story.text);\n  assert.equal(addedPayload.idDisplay, 'APP-42');\n  assert.equal(addedPayload.descriptionDisplay, '<p>Imported acceptance criteria</p>');\n  assert.equal(addedPayload.points, '5');\n  assert.equal(addedPayload.jiraUrl, 'https://example.atlassian.net/browse/APP-42');
 
   const storyUpdated = waitForEvent(host, 'updateTicket', (payload) => payload.ticketData?.id === story.id);
   guest.emit('updateTicket', { ...story, text: 'Updated integration story' });
