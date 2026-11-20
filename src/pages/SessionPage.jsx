@@ -19,7 +19,8 @@ const normaliseTickets = (value) => Array.isArray(value) ? value.filter((ticket)
 export default function SessionPage() {
   const { roomId } = useParams();
   const navigate = useNavigate();
-  const userName = sessionStorage.getItem('userName') || '';
+  const [userName, setUserName] = useState(() => sessionStorage.getItem('userName') || '');
+  const [inviteName, setInviteName] = useState('');
   const [isHost, setIsHost] = useState(sessionStorage.getItem('isHost') === 'true');
   const [connected, setConnected] = useState(false);
   const [status, setStatus] = useState('Connecting…');
@@ -66,7 +67,7 @@ export default function SessionPage() {
   }, [tickets]);
 
   useEffect(() => {
-    if (!userName) { navigate('/'); return undefined; }
+    if (!userName) return undefined;
     const connection = connectToRoom({
       roomId,
       userName,
@@ -312,12 +313,35 @@ export default function SessionPage() {
     ? Math.round((Math.max(0, ...Object.values(voteFrequency)) / Object.keys(votes).length) * 100)
     : 0;
 
+  function joinFromInvite(event) {
+    event.preventDefault();
+    const name = inviteName.trim();
+    if (!name) return;
+    sessionStorage.setItem('userName', name);
+    sessionStorage.setItem('isHost', 'false');
+    sessionStorage.setItem('isRoomCreator', 'false');
+    setUserName(name);
+  }
+
+  if (!userName) return <div className="legacy-session legacy-invite-join">
+    <div className="legacy-invite-join-card">
+      <img src="/assets/about/spade_1.png" alt="" />
+      <h1>Join Planning Poker session</h1>
+      <p>You've been invited to join session <strong>{roomId}</strong>. Enter your name to connect with the team.</p>
+      <form onSubmit={joinFromInvite}>
+        <label htmlFor="invite-join-name">Your name</label>
+        <input id="invite-join-name" autoFocus value={inviteName} onChange={event=>setInviteName(event.target.value)} placeholder="Enter your name" maxLength={40} required />
+        <button type="submit" disabled={!inviteName.trim()}>Join session</button>
+      </form>
+    </div>
+  </div>;
+
   return <div className="legacy-session">
     <header className="legacy-header">
       <a className="legacy-logo" href="/"><img src="/assets/about/spade_1.png" alt=""/> <span>Simply Poker</span></a>
       <div className="legacy-nav"><span className={`legacy-connection ${connected?'online':'offline'}`}>{connected?<Wifi size={13}/>:<WifiOff size={13}/>} {status}</span><button className="legacy-invite" onClick={()=>setInviteOpen(true)}><Link2 size={15}/> Invite Others</button><div className="legacy-user"><span className="legacy-avatar">{(userName||'U').slice(0,1).toUpperCase()}</span>{userName||'User'}</div><SessionTimer onNotice={setNotice}/><ProfileMenu userName={userName} isHost={isHost} onNotice={setNotice} onToggleHost={()=>isHost?releaseHost():requestHost()} onLeave={()=>{sessionStorage.clear();navigate('/');}}/></div>
     </header>
-    <div className="legacy-session-toolbar"><div className="legacy-room-label"><small>ROOM</small><strong>{roomId}</strong></div><div className="legacy-toolbar-actions">{isHost?<button onClick={releaseHost}>Release host</button>:<button onClick={requestHost} disabled={hostRequestBusy||!connected}>{hostRequestBusy?'Requesting…':'Become host'}</button>}<DataImportExport canManage={canManage} tickets={tickets} votesPerStory={votesPerStory} revealedStories={revealedStories} onImportStories={importStories} onNotice={setNotice}/></div></div>
+    <div className="legacy-session-toolbar"><div className="legacy-room-label"><small>ROOM</small><strong>{roomId}</strong></div><div className="legacy-toolbar-actions"><DataImportExport canManage={canManage} tickets={tickets} votesPerStory={votesPerStory} revealedStories={revealedStories} onImportStories={importStories} onNotice={setNotice} showToolbar={false}/></div></div>
     {notice&&<div className="legacy-notice" role="status">{notice}</div>}
     <main className="legacy-workspace">
       <aside className="legacy-sidebar"><h3>Current Members <span>{users.length}</span></h3><div className="legacy-members">{users.map((p,i)=><div className={`legacy-member ${votes[p.id]!==undefined?'voted':''}`} key={p.id||i}><span className="legacy-member-avatar">{(p.name||'?').slice(0,1).toUpperCase()}</span><span className="legacy-member-name">{p.name||'Member'}{p.id===window.roomSocket?.id?' (You)':''}</span><span className="legacy-member-vote">{revealed?String(votes[p.id]??''):(votes[p.id]!==undefined?'✓':'')}</span></div>)}{!users.length&&<p className="legacy-muted">Waiting for participants…</p>}</div>
