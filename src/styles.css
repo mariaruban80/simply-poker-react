@@ -341,3 +341,7 @@
 .legacy-card[draggable="true"]{cursor:grab}
 .legacy-card[draggable="true"]:active{cursor:grabbing}
 @media(max-width:700px){.legacy-workspace{padding-bottom:0}.legacy-main{padding-bottom:22px}}
+
+.legacy-search>button{width:44px;display:grid;place-items:center;border:1px solid #ddd;border-left:0;border-radius:0 24px 24px 0;background:#fff;color:#673ab7}
+.legacy-search>button:hover{background:#f4effa}
+.file-picker.drag-over{border-color:#673ab7;background:#f1eafb;box-shadow:0 0 0 3px #673ab71b}
