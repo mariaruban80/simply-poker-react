@@ -399,3 +399,22 @@
  .legacy-session .legacy-vote-space{width:35px;height:44px}
  .legacy-session .legacy-card{flex-basis:43px;width:43px;height:47px}
 }
+
+/* Profile and language chooser restored from the original session header */
+.legacy-session .profile-menu-heading{display:flex;align-items:center;gap:10px;padding:3px 2px 12px;border-bottom:1px solid #f0edf4;margin-bottom:4px}
+.legacy-session .profile-menu-heading>span:last-child{min-width:0}
+.legacy-session .profile-menu-avatar{width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;border-radius:50%;background:#673ab7;color:#fff;font-size:16px;font-weight:700}
+.legacy-session .profile-menu-heading strong{font-size:13px}
+.legacy-session .profile-menu-heading small{display:block;font-size:11px;color:#777;margin-top:3px}
+.legacy-session .profile-dropdown .profile-status-on{color:#238636;font-weight:700}
+.legacy-session .profile-dropdown .profile-status-off{color:#777}
+.legacy-session .language-modal-inline{margin:8px 0;padding:10px;border:1px solid #e8e1f0;border-radius:9px;background:#faf8fd}
+.legacy-session .language-modal-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;color:#4b356b;font-size:12px}
+.legacy-session .language-modal-heading button{border:0;background:transparent;color:#6a5b7d;padding:3px}
+.legacy-session .language-modal-inline .language-options{max-height:230px;grid-template-columns:1fr 1fr;gap:5px}
+.legacy-session .language-modal-inline .language-options button{display:grid;grid-template-columns:20px 1fr;align-items:center;text-align:left;gap:4px;padding:7px 6px;font-size:11px}
+.legacy-session .language-modal-inline .language-options button small{grid-column:2;padding:0;font-size:9px;color:#8b8197}
+.legacy-session .language-modal-inline .language-options button.selected small{color:#fff}
+.legacy-session .language-apply{width:100%;margin-top:8px;border:0;border-radius:6px;background:#673ab7;color:#fff;padding:9px 12px;font-size:12px;font-weight:700}
+.legacy-session .language-apply:disabled{opacity:.6;cursor:wait}
+@media(max-width:700px){.legacy-session .language-modal-inline .language-options{max-height:38vh}}
