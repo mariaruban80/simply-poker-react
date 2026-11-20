@@ -418,3 +418,32 @@
 .legacy-session .language-apply{width:100%;margin-top:8px;border:0;border-radius:6px;background:#673ab7;color:#fff;padding:9px 12px;font-size:12px;font-weight:700}
 .legacy-session .language-apply:disabled{opacity:.6;cursor:wait}
 @media(max-width:700px){.legacy-session .language-modal-inline .language-options{max-height:38vh}}
+
+/* Original header avatar and compact profile trigger */
+.legacy-session .legacy-header{position:relative;z-index:35;min-height:62px;padding:9px 22px;background:#fff;border-bottom:1px solid #e5e7eb}
+.legacy-session .legacy-logo{display:flex;align-items:center;gap:9px;color:#673ab7;text-decoration:none;font-weight:700}
+.legacy-session .legacy-nav{display:flex;align-items:center;gap:15px}
+.legacy-session .legacy-user{display:none}
+.legacy-session .profile-trigger{height:42px;display:flex;align-items:center;gap:8px;border:0;border-radius:22px;background:#faf8fd;padding:4px 11px 4px 5px;color:#423451;font-size:13px}
+.legacy-session .profile-trigger .legacy-avatar{width:32px;height:32px;display:grid;place-items:center;border-radius:50%;background:#673ab7;color:#fff;font-weight:700}
+.legacy-session .profile-trigger-name{display:inline;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.legacy-session .profile-trigger-chevron{font-size:17px;color:#806a9e}
+.legacy-session .profile-trigger:hover{background:#f0e6ff}
+.legacy-session .profile-dropdown{top:calc(100% + 8px);right:0;width:270px;border-radius:10px}
+@media(max-width:700px){
+ .legacy-session .legacy-header{min-height:56px;padding:7px 10px}
+ .legacy-session .legacy-logo{gap:5px}
+ .legacy-session .legacy-logo img{width:24px;height:24px}
+ .legacy-session .legacy-logo span{font-size:14px}
+ .legacy-session .legacy-nav{gap:6px}
+ .legacy-session .profile-trigger{height:36px;padding:3px 7px 3px 3px;gap:5px}
+ .legacy-session .profile-trigger .legacy-avatar{width:29px;height:29px}
+ .legacy-session .profile-trigger-name{max-width:65px;font-size:11px}
+ .legacy-session .profile-trigger-chevron{font-size:14px}
+ .legacy-session .profile-dropdown{position:fixed;top:57px;right:7px;width:min(280px,calc(100vw - 14px))}
+}
+@media(max-width:390px){
+ .legacy-session .profile-trigger-name{display:none}
+ .legacy-session .profile-trigger{padding-right:4px}
+ .legacy-session .legacy-invite{width:auto;min-width:0}
+}
