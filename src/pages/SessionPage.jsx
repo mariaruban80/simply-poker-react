@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Copy, Pencil, Trash2, Wifi, WifiOff, X, Link2 } from 'lucide-react';
 import { connectToRoom } from '../services/roomSocket.js';
 import DataImportExport from '../components/DataImportExport.jsx';
@@ -19,7 +19,8 @@ const normaliseTickets = (value) => Array.isArray(value) ? value.filter((ticket)
 export default function SessionPage() {
   const { roomId } = useParams();
   const navigate = useNavigate();
-  const [userName, setUserName] = useState(() => sessionStorage.getItem(`simplyPoker:${roomId}:userName`) || '');
+  const location = useLocation();
+  const [userName, setUserName] = useState(() => new URLSearchParams(location.search).get('invite') === '1' ? '' : (sessionStorage.getItem(`simplyPoker:${roomId}:userName`) || ''));
   const [inviteName, setInviteName] = useState('');
   const roomKey = (key) => `simplyPoker:${roomId}:${key}`;
   const [isHost, setIsHost] = useState(sessionStorage.getItem(`simplyPoker:${roomId}:isHost`) === 'true');
@@ -295,7 +296,7 @@ export default function SessionPage() {
     setNotice('You have released host access.');
   }
 
-  const inviteLink = window.location.origin + '/session/' + encodeURIComponent(roomId);
+  const inviteLink = window.location.origin + '/session/' + encodeURIComponent(roomId) + '?invite=1';
   async function copy() {
     try { await navigator.clipboard.writeText(inviteLink); setInviteCopied(true); setNotice('Invite link copied.'); }
     catch { setNotice('Copy was unavailable. Select and copy the invite link from the dialog.'); }
