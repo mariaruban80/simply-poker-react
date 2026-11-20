@@ -326,3 +326,18 @@
  .legacy-session-toolbar{padding-left:9px;padding-right:9px}
  .legacy-result-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* The original app pins the voting hand to the bottom on desktop and mobile. */
+@media(min-width:701px){
+ .legacy-workspace{padding-bottom:165px}
+ .legacy-main{padding-bottom:175px}
+ .legacy-planning-cards{position:fixed;left:0;bottom:0;z-index:20;width:100%;margin:0;padding:11px 20px 16px;background:#fff;border-top:1px solid #e8e1f0;box-shadow:0 -4px 18px rgba(40,16,74,.09)}
+ .legacy-planning-cards h3{margin-bottom:8px}
+ .legacy-cards{flex-wrap:nowrap;overflow-x:auto;justify-content:center;padding:4px 8px}
+ .legacy-table-person{transition:transform .15s ease}
+ .legacy-table-person:has(.legacy-table-avatar):hover{transform:translateY(-2px)}
+ .legacy-table-person:hover .legacy-table-avatar{outline:2px dashed #b29bd5;outline-offset:3px}
+}
+.legacy-card[draggable="true"]{cursor:grab}
+.legacy-card[draggable="true"]:active{cursor:grabbing}
+@media(max-width:700px){.legacy-workspace{padding-bottom:0}.legacy-main{padding-bottom:22px}}
