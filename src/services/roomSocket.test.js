@@ -61,11 +61,12 @@ describe('room socket session lifecycle protocol', () => {
       event: 'joinSession',
       payload: { sessionId: 'room-123', requestedHost: true, name: 'Alex' },
     });
-    expect(mockSocket.emitted.map((item) => item.event)).toEqual([
-      'joinSession',
-      'joinRoom',
-      'requestAllTickets',
-      'requestFullStateResync',
+    expect(mockSocket.emitted).toEqual([
+      { event: 'joinSession', payload: { sessionId: 'room-123', requestedHost: true, name: 'Alex' } },
+      { event: 'joinRoom', payload: { roomId: 'room-123', userName: 'Alex' } },
+      { event: 'requestAllTickets', payload: undefined },
+      { event: 'requestFullStateResync', payload: undefined },
+      { event: 'votingSystemSelected', payload: { roomId: 'room-123', votingSystem: 'fibonacci' } },
     ]);
     expect(sessionStorage.getItem('isHost')).toBe('true');
     expect(onEvent).toHaveBeenCalledWith('joinSessionResult', { isHost: true });
