@@ -807,6 +807,8 @@ if (existingVote !== vote) {
 
 socket.on('joinRoom', ({ roomId, userName }) => {
   if (!userName) return socket.emit('error', { message: 'Username is required' });
+  // A socket must not join a different room from the session it was authorised for.
+  if (socket.sessionId && socket.sessionId !== roomId) return socket.emit('error', { message: 'Session mismatch. Reopen the correct invite link.' });
 socket.join(roomId);
   socket.data.roomId = roomId;
   socket.data.userName = userName;
