@@ -459,9 +459,13 @@ function restoreUserVotesToCurrentSocket(roomId, socket) {
 
 const sessionHosts = new Map(); // sessionId → hostSocketId
 
+function isSessionHost(socket, roomId) {
+  return Boolean(roomId && sessionHosts.get(roomId) === socket.id);
+}
+
 function canManageSession(socket, roomId) {
   return Boolean(roomId && (
-    sessionHosts.get(roomId) === socket.id
+    isSessionHost(socket, roomId)
     || rooms[roomId]?.allowMemberManage === true
   ));
 }
@@ -1457,7 +1461,7 @@ socket.on('addTicket', (ticketData) => {
   socket.on('deleteCSVStory', ({ storyId, csvIndex }) => {
     const roomId = socket.data.roomId;
     
-    if (roomId && rooms[roomId] && canManageSession(socket, roomId)) {
+    if (roomId && rooms[roomId] && isSessionHost(socket, roomId)) {
       console.log(`[SERVER] CSV story deleted in room ${roomId}: ${storyId}, csvIndex: ${csvIndex}`);
       
       // Update room activity timestamp
@@ -1984,7 +1988,7 @@ socket.on('resetVotes', ({ storyId }) => {
   // Handle CSV data synchronization with improved state management
   socket.on('syncCSVData', (csvData) => {
     const roomId = socket.data.roomId;
-    if (roomId && rooms[roomId] && canManageSession(socket, roomId) && Array.isArray(csvData)) {
+    if (roomId && rooms[roomId] && isSessionHost(socket, roomId) && Array.isArray(csvData)) {
       console.log(`[SERVER] Received CSV data for room ${roomId}, ${csvData.length} rows`);
       
       // Update room activity timestamp
@@ -2073,7 +2077,7 @@ socket.on('resetVotes', ({ storyId }) => {
   // Export votes data
   socket.on('exportVotes', () => {
     const roomId = socket.data.roomId;
-    if (roomId && rooms[roomId] && canManageSession(socket, roomId)) {
+    if (roomId && rooms[roomId] && isSessionHost(socket, roomId)) {
       // Update room activity timestamp
       rooms[roomId].lastActivity = Date.now();
       
