@@ -35,6 +35,7 @@ export default function DataImportExport({ canManage, tickets, votesPerStory, re
   const [includeHeader, setIncludeHeader] = useState(true);
   const [detailedVotes, setDetailedVotes] = useState(true);
   const [onlyRevealed, setOnlyRevealed] = useState(false);
+  const [exportFields, setExportFields] = useState({ id: true, title: true, description: true, points: true, voteCount: true, average: true, votes: false });
   const [credentials, setCredentials] = useState(savedJiraDetails);
   const [jql, setJql] = useState('');
   const [jiraIssues, setJiraIssues] = useState([]);
@@ -118,24 +119,21 @@ export default function DataImportExport({ canManage, tickets, votesPerStory, re
       onNotice?.(onlyRevealed ? 'There are no revealed stories to export.' : 'There are no stories to export.');
       return;
     }
-    const header = ['ID', 'Title', 'Description', 'Story Points', 'Vote Count', 'Average Vote'];
-    if (detailedVotes) header.push('Votes');
-    const rows = [header];
-    stories.forEach((story) => {
-      const votes = Object.values(votesPerStory[story.id] || {});
-      const numericVotes = votes.map(Number).filter(Number.isFinite);
-      const average = numericVotes.length ? (numericVotes.reduce((sum, value) => sum + value, 0) / numericVotes.length).toFixed(2) : '';
-      const row = [
-        story.idDisplay || story.id,
-        story.text || story.title || '',
-        story.descriptionDisplay || '',
-        story.points || '?',
-        votes.length,
-        average,
-      ];
-      if (detailedVotes) row.push(votes.map(String).join('; '));
-      rows.push(row);
-    });
+    const fields = [
+      ['id','ID', story => story.idDisplay || story.id],
+      ['title','Title', story => story.text || story.title || ''],
+      ['description','Description', story => story.descriptionDisplay || ''],
+      ['points','Story Points', story => story.points || '?'],
+      ['voteCount','Vote Count', story => Object.keys(votesPerStory[story.id] || {}).length],
+      ['average','Average Vote', story => {
+        const values = Object.values(votesPerStory[story.id] || {}).map(value => value === '½' ? 0.5 : Number(value)).filter(Number.isFinite);
+        return values.length ? (values.reduce((sum,value)=>sum+value,0)/values.length).toFixed(2) : '';
+      }],
+      ['votes','Votes', story => Object.values(votesPerStory[story.id] || {}).map(String).join('; ')],
+    ].filter(([key]) => exportFields[key]);
+    if (!fields.length) { onNotice?.('Select at least one field to export.'); return; }
+    const rows = [fields.map(([,label])=>label)];
+    stories.forEach(story => rows.push(fields.map(([, , get])=>get(story))));
     downloadCsv(buildCsv(rows, includeHeader), `simply-poker-export-${new Date().toISOString().slice(0, 10)}.csv`);
     onNotice?.(`Exported ${stories.length} stories to CSV.`);
     closeModal();
@@ -235,9 +233,10 @@ export default function DataImportExport({ canManage, tickets, votesPerStory, re
           {modal === 'export' && <div className="data-modal-body">
             <p className="data-help">Export the stories and voting information from this session as a CSV file.</p>
             <label className="data-check"><input type="checkbox" checked={includeHeader} onChange={(event) => setIncludeHeader(event.target.checked)} /> Include column headings</label>
-            <label className="data-check"><input type="checkbox" checked={detailedVotes} onChange={(event) => setDetailedVotes(event.target.checked)} /> Include individual votes</label>
+            <div className="csv-export-mapping"><h3>Field mapping</h3><p className="data-help">Choose which story and voting fields to include in the exported file.</p>{[['id','Story ID'],['title','Title'],['description','Description'],['points','Story Points'],['voteCount','Vote Count'],['average','Average Vote'],['votes','Individual Votes']].map(([key,label])=><label className="data-check" key={key}><input type="checkbox" checked={exportFields[key]} onChange={e=>setExportFields(old=>({...old,[key]:e.target.checked}))}/>{label}</label>)}</div>
             <label className="data-check"><input type="checkbox" checked={onlyRevealed} onChange={(event) => setOnlyRevealed(event.target.checked)} /> Export only stories with revealed votes</label>
-            <p className="data-count">{tickets.filter((story) => !onlyRevealed || revealedStories[story.id]).length} stories will be exported.</p>
+            <p className="data-count">{tickets.filter((story) => !onlyRevealed || revealedStories[story.id]).length} stories will be exported · {Object.values(exportFields).filter(Boolean).length} fields selected.</p>
+            <div className="data-preview-table"><table><thead><tr>{[['id','ID'],['title','Title'],['description','Description'],['points','Points'],['voteCount','Votes'],['average','Average'],['votes','Individual votes']].filter(([key])=>exportFields[key]).map(([,label])=><th key={label}>{label}</th>)}</tr></thead><tbody>{tickets.filter(story=>!onlyRevealed||revealedStories[story.id]).slice(0,5).map(story=><tr key={story.id}>{[['id',story.idDisplay||story.id],['title',story.text||story.title||''],['description',story.descriptionDisplay||''],['points',story.points||'?'],['voteCount',Object.keys(votesPerStory[story.id]||{}).length],['average',(()=>{const v=Object.values(votesPerStory[story.id]||{}).map(x=>x==='½'?0.5:Number(x)).filter(Number.isFinite);return v.length?(v.reduce((a,b)=>a+b,0)/v.length).toFixed(2):''})()],['votes',Object.values(votesPerStory[story.id]||{}).join('; ')]].filter(([key])=>exportFields[key]).map(([key,value])=><td key={key}>{value}</td>)}</tr>)}</tbody></table></div>
             <div className="data-modal-actions"><button type="button" className="data-secondary" onClick={closeModal}>Cancel</button><button type="button" className="data-primary" disabled={!tickets.length} onClick={exportStories}><Download size={15} /> Download CSV</button></div>
           </div>}
 
