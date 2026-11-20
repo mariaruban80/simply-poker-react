@@ -6,9 +6,9 @@ import DataImportExport from '../components/DataImportExport.jsx';
 import { ProfileMenu, SessionTimer, FeedbackWidget } from '../components/SessionTools.jsx';
 
 const scales = {
-  fibonacci: ['0', '1', '2', '3', '5', '8', '13', '20', '40', '100', '?', '☕'],
-  shortFib: ['0', '1', '2', '3', '5', '8', '13', '?', '☕'],
-  tshirt: ['XS', 'S', 'M', 'L', 'XL', 'XXL', '?', '☕'],
+  fibonacci: ['0', '1', '2', '3', '5', '8', '13', '21'],
+  shortFib: ['0', '½', '1', '2', '3'],
+  tshirt: ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL'],
   tshirtNum: ['XS (1)', 'S (2)', 'M (3)', 'L (5)', 'XL (8)', 'XXL (13)'],
   custom: ['?', '☕', '∞'],
 };
