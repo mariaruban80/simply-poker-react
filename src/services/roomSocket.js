@@ -1,7 +1,8 @@
 import { io } from 'socket.io-client';
+import { API_BASE_URL } from './api.js';
 
 export function connectToRoom({ roomId, userName, onStatus, onEvent }) {
-  const socket = io({
+  const socket = io(API_BASE_URL || undefined, {
     transports: ['websocket', 'polling'],
     reconnection: true,
     reconnectionAttempts: 10,
