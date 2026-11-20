@@ -28,6 +28,9 @@ export default function DataImportExport({ canManage, tickets, votesPerStory, re
   const [modal, setModal] = useState('');
   const [csvFile, setCsvFile] = useState(null);
   const [csvStories, setCsvStories] = useState([]);
+  const [csvRows, setCsvRows] = useState([]);
+  const [useFirstRowAsHeaders, setUseFirstRowAsHeaders] = useState(true);
+  const [csvMapping, setCsvMapping] = useState({ id: '', summary: '', description: '', estimate: '', link: '' });
   const [csvError, setCsvError] = useState('');
   const [includeHeader, setIncludeHeader] = useState(true);
   const [detailedVotes, setDetailedVotes] = useState(true);
@@ -48,6 +51,9 @@ export default function DataImportExport({ canManage, tickets, votesPerStory, re
     && (!searchText || `${issue.key} ${issue.summary}`.toLowerCase().includes(searchText.toLowerCase()))
   ), [jiraIssues, statusFilter, typeFilter, searchText]);
 
+  const csvHeaders = useFirstRowAsHeaders ? (csvRows[0] || []).map((value, index) => String(value || '').trim() || `Column ${index + 1}`) : (csvRows[0] || []).map((_, index) => `Column ${index + 1}`);
+  const csvDataRows = useFirstRowAsHeaders ? csvRows.slice(1) : csvRows;
+  const csvMappingOptions = Object.entries(csvMapping).map(([field, selected]) => ({ field, selected }));
   const statusOptions = [...new Set(jiraIssues.map((issue) => issue.status))];
   const typeOptions = [...new Set(jiraIssues.map((issue) => issue.issueType))];
 
@@ -60,26 +66,50 @@ export default function DataImportExport({ canManage, tickets, votesPerStory, re
   }
 
   async function readCsv(file) {
-    setCsvFile(file);
-    setCsvError('');
+    setCsvFile(file); setCsvError(''); setCsvStories([]);
     try {
       const rows = parseCsv(await file.text());
-      const stories = csvRowsToStories(rows);
-      if (!stories.length) throw new Error('No usable story rows were found. Check that the file contains a title or description column.');
-      setCsvStories(stories);
+      if (!rows.length || !rows.some((row) => row.some((cell) => String(cell).trim()))) throw new Error('The selected CSV file is empty.');
+      setCsvRows(rows);
+      const headers = rows[0].map((value) => String(value || '').toLowerCase().trim());
+      const find = (names) => headers.findIndex((value) => names.includes(value.replace(/[ _-]/g, '')));
+      setCsvMapping({
+        id: String(find(['id','key','issuekey','ticketid']) >= 0 ? find(['id','key','issuekey','ticketid']) : ''),
+        summary: String(find(['summary','title','name','story']) >= 0 ? find(['summary','title','name','story']) : (rows[0].length > 1 ? 1 : 0)),
+        description: String(find(['description','details']) >= 0 ? find(['description','details']) : ''),
+        estimate: String(find(['estimate','storypoints','points']) >= 0 ? find(['estimate','storypoints','points']) : ''),
+        link: String(find(['link','url','issueurl']) >= 0 ? find(['link','url','issueurl']) : ''),
+      });
+      setUseFirstRowAsHeaders(true);
     } catch (error) {
-      setCsvStories([]);
+      setCsvRows([]); setCsvStories([]);
       setCsvError(error.message || 'Unable to read this CSV file.');
     }
   }
 
+  function buildMappedCsvStories() {
+    const indexes = Object.fromEntries(Object.entries(csvMapping).map(([key, value]) => [key, value === '' ? -1 : Number(value)]));
+    return csvDataRows.map((row, index) => {
+      const get = (key) => indexes[key] >= 0 ? String(row[indexes[key]] || '').trim() : '';
+      const summary = get('summary') || get('description');
+      if (!summary) return null;
+      const idDisplay = get('id');
+      return {
+        id: 'story_csv_' + (idDisplay || Date.now() + '_' + index).replace(/[^a-zA-Z0-9_-]/g, '_') + '_' + index,
+        idDisplay, text: summary, title: summary,
+        descriptionDisplay: get('description') && get('description') !== summary ? get('description') : '',
+        points: get('estimate') || '?', jiraUrl: get('link') || '',
+        originalText: summary, originalLang: 'en',
+      };
+    }).filter(Boolean);
+  }
+
   function importCsv() {
-    if (!csvStories.length) return;
-    onImportStories(csvStories);
-    onNotice?.(`Imported ${csvStories.length} CSV stories.`);
-    closeModal();
-    setCsvFile(null);
-    setCsvStories([]);
+    const stories = buildMappedCsvStories();
+    if (!stories.length) { setCsvError('No usable stories found. Check the Summary mapping and selected rows.'); return; }
+    onImportStories(stories);
+    onNotice?.(`Imported ${stories.length} CSV stories.`);
+    closeModal(); setCsvFile(null); setCsvRows([]); setCsvStories([]);
   }
 
   function exportStories() {
@@ -191,13 +221,15 @@ export default function DataImportExport({ canManage, tickets, votesPerStory, re
           {modal === 'csv' && <div className="data-modal-body">
             <p className="data-help">Choose a CSV file. The preview below lets you check the stories before adding them to this session. Quoted commas and line breaks are supported.</p>
             <label className="file-picker"><FileSpreadsheet size={19} /><span>{csvFile?.name || 'Choose a CSV file'}</span><input type="file" accept=".csv,text/csv,.txt" onChange={(event) => event.target.files?.[0] && readCsv(event.target.files[0])} /></label>
-            {csvError && <p className="data-error" role="alert">{csvError}</p>}
-            {csvStories.length > 0 && <>
-              <p className="data-count">{csvStories.length} stories ready to import</p>
-              <div className="data-preview-table"><table><thead><tr><th>ID</th><th>Story</th><th>Description</th></tr></thead><tbody>{csvStories.slice(0, 8).map((story) => <tr key={story.id}><td>{story.idDisplay || '—'}</td><td>{story.text}</td><td>{story.descriptionDisplay || '—'}</td></tr>)}</tbody></table></div>
-              {csvStories.length > 8 && <p className="data-help">Showing first 8 of {csvStories.length} rows.</p>}
+            {csvRows.length > 0 && <>
+              <label className="data-check"><input type="checkbox" checked={useFirstRowAsHeaders} onChange={(event) => setUseFirstRowAsHeaders(event.target.checked)} /> Use first row as column headings</label>
+              <div className="csv-mapping-grid">{[['summary','Summary (required)'],['id','Key / ID'],['description','Description'],['link','Link'],['estimate','Estimate']].map(([key,label])=><label key={key}>{label}<select value={csvMapping[key]} onChange={(event)=>setCsvMapping(old=>({...old,[key]:event.target.value}))}><option value="">Do not import</option>{csvHeaders.map((header,index)=><option key={index} value={index}>{header}</option>)}</select></label>)}</div>
+              <p className="data-count">{buildMappedCsvStories().length} stories ready to import</p>
+              <div className="data-preview-table"><table><thead><tr><th>ID</th><th>Story</th><th>Description</th><th>Estimate</th></tr></thead><tbody>{buildMappedCsvStories().slice(0,8).map(story=><tr key={story.id}><td>{story.idDisplay||'—'}</td><td>{story.text}</td><td>{story.descriptionDisplay||'—'}</td><td>{story.points}</td></tr>)}</tbody></table></div>
             </>}
-            <div className="data-modal-actions"><button type="button" className="data-secondary" onClick={closeModal}>Cancel</button><button type="button" className="data-primary" disabled={!csvStories.length} onClick={importCsv}>Import {csvStories.length || ''} stories</button></div>
+            {csvError && <p className="data-error" role="alert">{csvError}</p>}
+
+            <div className="data-modal-actions"><button type="button" className="data-secondary" onClick={closeModal}>Cancel</button><button type="button" className="data-primary" disabled={!csvRows.length || !buildMappedCsvStories().length} onClick={importCsv}>Import {buildMappedCsvStories().length || ''} stories</button></div>
           </div>}
 
           {modal === 'export' && <div className="data-modal-body">
