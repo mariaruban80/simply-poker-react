@@ -14,7 +14,7 @@ export function connectToRoom({ roomId, userName, onStatus, onEvent }) {
     'deleteStory', 'storySelected', 'storyVotes', 'voteUpdate', 'votesUpdate',
     'votesRevealed', 'votesReset', 'restoreUserVote', 'votingSystemUpdate',
     'storyPointsUpdate', 'hostChanged', 'hostLeft', 'hostReleased', 'syncCSVData',
-    'exportData', 'error',
+    'exportData', 'sessionPermissionsUpdate', 'error',
   ];
   events.forEach((eventName) => socket.on(eventName, (payload) => onEvent?.(eventName, payload || {})));
 
