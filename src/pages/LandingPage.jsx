@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../landing.css';
 
@@ -19,6 +19,8 @@ const members = [
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const diagramRef = useRef(null);
+  const [diagramSize, setDiagramSize] = useState(380);
   const [mode, setMode] = useState('create');
   const [name, setName] = useState(sessionStorage.getItem('userName') || '');
   const [sessionName, setSessionName] = useState('');
@@ -26,21 +28,44 @@ export default function LandingPage() {
   const [scale, setScale] = useState('fibonacci');
   const [allowManage, setAllowManage] = useState(false);
   const [requestHost, setRequestHost] = useState(false);
-  const [selectedMember, setSelectedMember] = useState(0);
-  const [showAll, setShowAll] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [visibleEstimate, setVisibleEstimate] = useState('none');
   const [error, setError] = useState('');
   const [pulse, setPulse] = useState(false);
+
   useEffect(() => {
-    const steps = [0, 2, 4, 'all'];
-    const ids = steps.map((step, i) => setTimeout(() => {
-      if (step === 'all') { setShowAll(true); setSelectedMember(4); setPulse(true); setTimeout(() => setPulse(false), 650); }
-      else { setSelectedMember(step); setShowAll(false); }
-    }, 1000 + i * 800));
-    return () => ids.forEach(clearTimeout);
+    const element = diagramRef.current;
+    if (!element) return undefined;
+    const measure = () => {
+      const width = element.getBoundingClientRect().width;
+      if (width > 0) setDiagramSize(width);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const timers = [];
+    const playMember = (index) => {
+      setSelectedMember(index);
+      setVisibleEstimate(index);
+    };
+    timers.push(setTimeout(() => playMember(0), 1000));
+    timers.push(setTimeout(() => playMember(2), 1800));
+    timers.push(setTimeout(() => playMember(4), 2600));
+    timers.push(setTimeout(() => {
+      setVisibleEstimate('all');
+      setPulse(true);
+      timers.push(setTimeout(() => setPulse(false), 600));
+    }, 3600));
+    return () => timers.forEach(clearTimeout);
   }, []);
 
   function submit(event) {
     event.preventDefault();
+    setError('');
     if (!name.trim()) return setError('Please enter your name.');
     if (mode === 'create' && !sessionName.trim()) return setError('Please enter a session name.');
     if (mode === 'join' && !roomId.trim()) return setError('Please enter a session ID.');
@@ -62,48 +87,78 @@ export default function LandingPage() {
     }
   }
 
+  const radius = diagramSize / 2 - 30;
+  const lineLength = radius - 30;
+  const bubbleRadius = radius / 1.5;
+
+  function selectMember(index) {
+    setSelectedMember(index);
+    setVisibleEstimate(index);
+  }
+
+  function revealAll() {
+    setVisibleEstimate('all');
+    setPulse(true);
+    window.setTimeout(() => setPulse(false), 600);
+  }
+
   return (
-    <div className="legacy-landing">
-      <header className="legacy-header">
+    <div id="landing-page">
+      <header>
         <div className="logo">
           <img src="/assets/about/spade_1.png" alt="Simply Poker" />
           <span className="logo-text">Simply Poker</span>
         </div>
         <div className="header-buttons">
-          <a href="/" className="button home-button"><i className="fas fa-home" /> HOME</a>
-          <button type="button" className="button primary-button" onClick={() => { setMode('create'); setError(''); }}>
-            <i className="fas fa-plus" /> NEW SESSION
+          <a href="/" className="button home-button"><i className="fas fa-home" aria-hidden="true" /> HOME</a>
+          <button type="button" id="newSessionBtn" className="button primary-button" onClick={() => { setMode('create'); setError(''); }}>
+            <i className="fas fa-plus" aria-hidden="true" /> NEW SESSION
           </button>
-          <button type="button" className="button secondary-button" onClick={() => { setMode('join'); setError(''); }}>
-            <i className="fas fa-sign-in-alt" /> JOIN SESSION
+          <button type="button" id="joinSessionBtn" className="button secondary-button" onClick={() => { setMode('join'); setError(''); }}>
+            <i className="fas fa-sign-in-alt" aria-hidden="true" /> JOIN SESSION
           </button>
         </div>
       </header>
 
-      <main className="legacy-main">
+      <main>
         <div className="content-container">
           <section className="visual-container">
             <h2 className="concept-title">Collaborative Estimation</h2>
             <span className="purple-underline" />
-            <div className="agile-visualization">
-              <div className="collaboration-diagram">
+            <div className="agile-visualization" id="agileVisualization">
+              <div className="collaboration-diagram" ref={diagramRef}>
+                {members.map((member, index) => (
+                  <button
+                    key={member.name}
+                    type="button"
+                    className={`team-member${selectedMember === index ? ' member-selected' : ''}`}
+                    data-estimate={member.estimate}
+                    onClick={() => selectMember(index)}
+                    aria-label={`${member.name}, estimate ${member.estimate}`}
+                  >
+                    {member.name}
+                  </button>
+                ))}
                 {members.map((member, index) => {
-                  const angle = (index * 45 - 90) * Math.PI / 180;
-                  const radius = 160;
+                  const angle = index * (360 / members.length) * Math.PI / 180;
+                  const bubbleX = Math.cos(angle) * bubbleRadius;
+                  const bubbleY = Math.sin(angle) * bubbleRadius;
                   return (
-                    <div key={member.name}>
-                      <div className="connection-line" style={{ width: '130px', transform: `rotate(${angle}rad)` }} />
-                      {showAll && <div className="estimate-bubble visible" style={{ transitionDelay: `${index * 100}ms`, left: `calc(50% + ${Math.cos(angle) * 105}px - 20px)`, top: `calc(50% + ${Math.sin(angle) * 105}px - 15px)` }}>{member.estimate}</div>}
-                      <button type="button" className={`team-member ${selectedMember === index ? 'member-selected' : ''}`}
-                        style={{ left: `calc(50% + ${Math.cos(angle) * radius}px - 30px)`, top: `calc(50% + ${Math.sin(angle) * radius}px - 30px)` }}
-                        onClick={() => { setSelectedMember(index); setShowAll(false); }} aria-label={`${member.name}, estimate ${member.estimate}`}>
-                        {member.name}
-                      </button>
+                    <div key={`diagram-decoration-${member.name}`}>
+                      <div className="connection-line" style={{ width: `${lineLength}px`, transform: `rotate(${angle}rad)` }} />
+                      <div
+                        className={`estimate-bubble${visibleEstimate === 'all' || visibleEstimate === index ? ' is-visible' : ''}`}
+                        style={{ left: `calc(50% + ${bubbleX}px - 20px)`, top: `calc(50% + ${bubbleY}px - 15px)` }}
+                        aria-hidden={visibleEstimate !== 'all' && visibleEstimate !== index}
+                      >
+                        {member.estimate}
+                      </div>
                     </div>
                   );
                 })}
-                {!showAll && <div className="estimate-bubble visible selected-estimate" style={{ left: `calc(50% + ${Math.cos((selectedMember * 45 - 90) * Math.PI / 180) * 105}px - 20px)`, top: `calc(50% + ${Math.sin((selectedMember * 45 - 90) * Math.PI / 180) * 105}px - 15px)` }}>{members[selectedMember].estimate}</div>}
-                <button type="button" className={`central-node ${pulse ? 'pulse' : ''}`} onClick={() => { setShowAll(value => !value); setSelectedMember(0); setPulse(true); setTimeout(() => setPulse(false), 650); }}>Planning<br />Poker</button>
+                <button type="button" className={`central-node${pulse ? ' is-pulsing' : ''}`} onClick={revealAll}>
+                  Planning<br />Poker
+                </button>
               </div>
               <p className="feature-text">Create a <span>collaborative environment</span> where team members can estimate together in real-time</p>
             </div>
@@ -111,22 +166,22 @@ export default function LandingPage() {
 
           <section className="forms-container">
             {mode === 'create' ? (
-              <div className="session-box">
+              <div className="session-box" id="createSessionBox">
                 <h2>Create new session<span className="green-underline" /></h2>
                 <form onSubmit={submit}>
                   <div className="form-group">
                     <label htmlFor="sessionNameInput">Session name *</label>
-                    <input id="sessionNameInput" value={sessionName} onChange={e => setSessionName(e.target.value)} placeholder="Give your session a memorable name" maxLength={80} />
+                    <input id="sessionNameInput" type="text" value={sessionName} onChange={e => setSessionName(e.target.value)} placeholder="Give your session a memorable name" maxLength={80} />
                   </div>
                   <div className="form-group">
                     <label htmlFor="createNameInput">Your name *</label>
-                    <input id="createNameInput" value={name} onChange={e => setName(e.target.value)} placeholder="How should we call you?" maxLength={40} />
+                    <input id="createNameInput" type="text" value={name} onChange={e => setName(e.target.value)} placeholder="How should we call you?" maxLength={40} />
                   </div>
                   <div className="scale-options">
                     <h3>Choose your estimation scale:</h3>
                     {scales.map(([value, label]) => (
                       <div className="radio-group" key={value}>
-                        <input type="radio" name="scale" id={value} checked={scale === value} onChange={() => setScale(value)} />
+                        <input type="radio" name="scale" id={value} value={value} checked={scale === value} onChange={() => setScale(value)} />
                         <label htmlFor={value}>{label}</label>
                       </div>
                     ))}
@@ -140,16 +195,16 @@ export default function LandingPage() {
                 </form>
               </div>
             ) : (
-              <div className="session-box">
+              <div className="session-box" id="joinSessionBox">
                 <h2>Join a Session<span className="green-underline" /></h2>
                 <form onSubmit={submit}>
                   <div className="form-group">
                     <label htmlFor="sessionIdInput">Session ID *</label>
-                    <input id="sessionIdInput" value={roomId} onChange={e => setRoomId(e.target.value)} placeholder="Enter the session ID you received" />
+                    <input id="sessionIdInput" type="text" value={roomId} onChange={e => setRoomId(e.target.value)} placeholder="Enter the session ID you received" />
                   </div>
                   <div className="form-group">
                     <label htmlFor="joinNameInput">Your name *</label>
-                    <input id="joinNameInput" value={name} onChange={e => setName(e.target.value)} placeholder="How should we call you?" maxLength={40} />
+                    <input id="joinNameInput" type="text" value={name} onChange={e => setName(e.target.value)} placeholder="How should we call you?" maxLength={40} />
                   </div>
                   <div className="checkbox-container">
                     <input type="checkbox" id="allowJoinAsHost" checked={requestHost} onChange={e => setRequestHost(e.target.checked)} />
