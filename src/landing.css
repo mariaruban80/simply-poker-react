@@ -859,6 +859,15 @@ main {
 }
 /* The original page body styles now belong to the React page root. */
 #landing-page { min-height: 100vh; width: 100%; }
+#landing-page .team-member { border: 0; font-family: inherit; line-height: 1; }
+#landing-page .central-node { border: 0; }
+#landing-page .estimate-bubble.is-visible { opacity: 1; transform: scale(1); }
+#landing-page .central-node.is-pulsing { animation: landing-poker-pulse .6s ease-in-out; }
+@keyframes landing-poker-pulse {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.15); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
 #landing-page .team-member:focus-visible,
 #landing-page .central-node:focus-visible,
 #landing-page .button:focus-visible,
