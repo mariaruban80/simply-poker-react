@@ -670,9 +670,11 @@ socket.on('updateStoryPoints', ({ storyId, points }) => {
 
     if (rooms[roomId]) {
         rooms[roomId].lastActivity = Date.now();
+        if (!rooms[roomId].storyPoints) rooms[roomId].storyPoints = {};
+        rooms[roomId].storyPoints[storyId] = points;
+        const ticket = rooms[roomId].tickets?.find((item) => item.id === storyId);
+        if (ticket) ticket.points = points;
     }
-
-
 
     // More robust approach: Iterate and emit individually + track successful broadcasts
     let clientsInRoom = 0;          // Counts the clients in the room excluding sender
@@ -813,6 +815,7 @@ socket.join(roomId);
       selectedIndex: 0,
       votesPerStory: {},
       votesRevealed: {},
+      storyPoints: {},
       tickets: [],
       deletedStoryIds: new Set(),
       deletedStoriesTimestamp: {},
@@ -1203,6 +1206,8 @@ socket.on('restoreUserVote', ({ storyId, vote }) => {
       tickets: filteredTickets,
       votesPerStory: activeVotes,
       votesRevealed: activeRevealed,
+      storyPoints: rooms[roomId].storyPoints || {},
+      votingSystem: roomVotingSystems[roomId] || 'fibonacci',
       deletedStoryIds: Array.from(rooms[roomId].deletedStoryIds),
       allowMemberManage: Boolean(rooms[roomId].allowMemberManage)
     });
