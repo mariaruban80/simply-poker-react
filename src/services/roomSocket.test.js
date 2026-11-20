@@ -45,7 +45,7 @@ describe('room socket session lifecycle protocol', () => {
   });
 
   it('joins the existing server session protocol and requests a full state resync', () => {
-    sessionStorage.setItem('requestedHost', 'true');
+    sessionStorage.setItem('simplyPoker:room-123:requestedHost', 'true');
     const onEvent = vi.fn();
     const connection = connectToRoom({
       roomId: 'room-123',
@@ -68,10 +68,23 @@ describe('room socket session lifecycle protocol', () => {
       { event: 'requestFullStateResync', payload: undefined },
       { event: 'votingSystemSelected', payload: { roomId: 'room-123', votingSystem: 'fibonacci' } },
     ]);
-    expect(sessionStorage.getItem('isHost')).toBe('true');
+    expect(sessionStorage.getItem('simplyPoker:room-123:isHost')).toBe('true');
     expect(onEvent).toHaveBeenCalledWith('joinSessionResult', { isHost: true });
     connection.disconnect();
     expect(mockSocket.disconnected).toBe(true);
+  });
+
+
+  it('does not inherit host intent or role between different sessions in the same tab', () => {
+    sessionStorage.setItem('simplyPoker:room-a:requestedHost', 'true');
+    sessionStorage.setItem('simplyPoker:room-a:isHost', 'true');
+    const connection = connectToRoom({ roomId: 'room-b', userName: 'Alex', onEvent: vi.fn(), onStatus: vi.fn() });
+    mockSocket.connected = true;
+    mockSocket.trigger('connect');
+    expect(mockSocket.emitted[0].payload).toEqual({ sessionId: 'room-b', requestedHost: false, name: 'Alex' });
+    expect(sessionStorage.getItem('simplyPoker:room-b:isHost')).toBe('true');
+    expect(sessionStorage.getItem('simplyPoker:room-a:isHost')).toBe('true');
+    connection.disconnect();
   });
 
   it('forwards host transfer, release, and disconnect lifecycle events', () => {
