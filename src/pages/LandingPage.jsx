@@ -73,6 +73,7 @@ export default function LandingPage() {
     sessionStorage.setItem('userName', name.trim());
     if (mode === 'create') {
       const id = crypto.randomUUID().replaceAll('-', '').slice(0, 8);
+      sessionStorage.setItem(`simplyPoker:${id}:userName`, name.trim());
       sessionStorage.setItem(`simplyPoker:${id}:requestedHost`, 'true');
       sessionStorage.setItem(`simplyPoker:${id}:sessionName`, sessionName.trim());
       sessionStorage.setItem(`simplyPoker:${id}:votingSystem`, scale);
@@ -81,6 +82,7 @@ export default function LandingPage() {
 
       navigate('/session/' + id);
     } else {
+      sessionStorage.setItem(`simplyPoker:${roomId.trim()}:userName`, name.trim());
       sessionStorage.setItem(`simplyPoker:${roomId.trim()}:requestedHost`, String(requestHost));
 
       sessionStorage.setItem(`simplyPoker:${roomId.trim()}:isHost`, 'false');
