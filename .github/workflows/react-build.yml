@@ -20,7 +20,6 @@ jobs:
       - run: npm run test:integration
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high
-      - name: Audit development dependencies (diagnostic)
+      - name: Audit all dependencies
         run: npm audit --audit-level=high
-        continue-on-error: true
       - run: node --check server.js
