@@ -538,3 +538,24 @@
 @media(max-width:700px){
  .legacy-sidebar,.legacy-main,.legacy-rightbar{padding-top:14px}
 }
+
+
+/* Make the three session workspace columns blend into the page background. */
+.legacy-session .legacy-sidebar,
+.legacy-session .legacy-main,
+.legacy-session .legacy-rightbar {
+  border-color: #fff;
+}
+@media (max-width: 1050px) {
+  .legacy-session .legacy-rightbar {
+    border-top-color: #fff;
+  }
+}
+@media (max-width: 700px) {
+  .legacy-session .legacy-sidebar,
+  .legacy-session .legacy-rightbar {
+    border-top-color: #fff;
+    border-right-color: #fff;
+    border-left-color: #fff;
+  }
+}
