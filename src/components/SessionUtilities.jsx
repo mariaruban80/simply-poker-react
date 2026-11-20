@@ -1,3 +1,4 @@
+import { apiUrl } from '../services/api.js';
 import { useEffect, useState } from 'react';
 import { Clock3, Languages, LogOut, MessageSquare, Settings, UserRound, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -26,7 +27,7 @@ export function ProfileMenu({ isHost, onNotice }) {
     if (!feedback.trim()) return;
     setSending(true);
     try {
-      const response = await fetch('/api/feedback', {
+      const response = await fetch(apiUrl('/api/feedback'), {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ emoji, feedback: feedback.trim(), email: email.trim() }),
       });
