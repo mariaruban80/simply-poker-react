@@ -530,8 +530,8 @@ console.log(`[SERVER] New client connected: ${socket.id}`);
 // Handle host role request
 socket.on("requestHost", (data, callback) => {
   const sessionId = data.sessionId || socket.sessionId;
-  if (!sessionId) {
-    if (callback) callback({ allowed: false, reason: "Not in a session" });
+  if (!sessionId || (socket.sessionId !== sessionId && socket.data.roomId !== sessionId)) {
+    if (callback) callback({ allowed: false, reason: "Join the session before requesting host access" });
     return;
   }
 
@@ -569,7 +569,7 @@ socket.on("requestHost", (data, callback) => {
 // Handle host role release
 socket.on("releaseHost", (data) => {
   const sessionId = data.sessionId || socket.sessionId;
-  if (!sessionId) return;
+  if (!sessionId || (socket.sessionId !== sessionId && socket.data.roomId !== sessionId)) return;
 
   if (sessionHosts.get(sessionId) === socket.id) {
     sessionHosts.delete(sessionId);
@@ -1495,7 +1495,7 @@ socket.on('addTicket', (ticketData) => {
   
   // Store the selected voting system for the room
   socket.on('votingSystemSelected', ({ roomId, votingSystem }) => {
-    if (roomId && votingSystem && canManageSession(socket, roomId)) {
+    if (roomId && roomId === socket.data.roomId && votingSystem && canManageSession(socket, roomId)) {
       console.log(`[SERVER] Host selected voting system '${votingSystem}' for room ${roomId}`);
       
       // Update room activity timestamp
@@ -1903,6 +1903,8 @@ socket.on('resetVotes', ({ storyId }) => {
       // Reset story points if tracked
       if (rooms[roomId].storyPoints && rooms[roomId].storyPoints[storyId]) {
         delete rooms[roomId].storyPoints[storyId];
+        const resetTicket = rooms[roomId].tickets?.find((ticket) => ticket.id === storyId);
+        if (resetTicket) resetTicket.points = '?';
         // Broadcast story points reset to all clients
         io.to(roomId).emit('storyPointsUpdate', { storyId, points: '?' });
       }
