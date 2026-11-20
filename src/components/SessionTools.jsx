@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Clock3, MessageSquareText, UserCircle, X, Languages, ShieldCheck, Upload, Download, Link2, LogOut } from 'lucide-react';
 
 const LANGUAGES = [
@@ -56,11 +56,13 @@ async function applyInterfaceLanguage(language) {
 
 export function ProfileMenu({ userName, isHost, onLeave, onNotice, onToggleHost }) {
   const [open,setOpen]=useState(false);
+  const menuRef=useRef(null);
   const [language,setLanguage]=useState('en');
   const [pendingLanguage,setPendingLanguage]=useState('en');
   const [showLanguages,setShowLanguages]=useState(false);
   const [translating,setTranslating]=useState(false);
   useEffect(()=>{localStorage.setItem('selectedLanguage','en');setLanguage('en');setPendingLanguage('en');},[]);
+  useEffect(()=>{if(!open)return undefined;const outside=(event)=>{if(!menuRef.current?.contains(event.target))setOpen(false);};const key=(event)=>{if(event.key==='Escape')setOpen(false);};document.addEventListener('pointerdown',outside);document.addEventListener('keydown',key);return()=>{document.removeEventListener('pointerdown',outside);document.removeEventListener('keydown',key);};},[open]);
   async function applyLanguage(){
     setTranslating(true);
     try {
@@ -72,15 +74,17 @@ export function ProfileMenu({ userName, isHost, onLeave, onNotice, onToggleHost 
     } catch { onNotice?.('Translation could not be completed. Please try again.'); }
     finally { setTranslating(false); }
   }
-  return <div className="profile-tools">
+  return <div className="profile-tools" ref={menuRef}>
     <button className="profile-trigger" onClick={()=>setOpen(v=>!v)} aria-expanded={open} aria-label={`Profile menu for ${userName||'User'}`}><span className="legacy-avatar">{(userName||'U').slice(0,1).toUpperCase()}</span><span className="profile-trigger-name">{userName||'User'}</span><span className="profile-trigger-chevron">⌄</span></button>
     {open&&<div className="profile-dropdown">
       <div className="profile-menu-heading"><span className="profile-menu-avatar">{(userName||'U').slice(0,1).toUpperCase()}</span><span><strong>{userName||'User'}</strong><small>{isHost?'Session host':'Session participant'}</small></span></div>
       <button className="profile-menu-item" onClick={()=>setShowLanguages(v=>!v)}><Languages size={16}/><span>Change language</span><small>{LANGUAGES.find(x=>x[0]===language)?.[1]||'English'}</small></button>
       <button className="profile-menu-item" onClick={()=>{onToggleHost?.();setOpen(false);}}><ShieldCheck size={16}/><span>{isHost?'Release host':'Request host access'}</span><small className={isHost?'profile-status-on':'profile-status-off'}>{isHost?'Host':'Participant'}</small></button>
-      <button className="profile-menu-item" onClick={()=>{window.dispatchEvent(new CustomEvent('simply-poker:data-action',{detail:'csv'}));setOpen(false);}}><Upload size={16}/><span>Import from CSV</span></button>
-      <button className="profile-menu-item" onClick={()=>{window.dispatchEvent(new CustomEvent('simply-poker:data-action',{detail:'jira'}));setOpen(false);}}><Link2 size={16}/><span>Import from JIRA</span></button>
-      <button className="profile-menu-item" onClick={()=>{window.dispatchEvent(new CustomEvent('simply-poker:data-action',{detail:'export'}));setOpen(false);}}><Download size={16}/><span>Export to CSV</span></button>
+      {isHost&&<>
+        <button className="profile-menu-item" onClick={()=>{setOpen(false);window.dispatchEvent(new CustomEvent('simply-poker:data-action',{detail:'csv'}));}}><Upload size={16}/><span>Import from CSV</span></button>
+        <button className="profile-menu-item" onClick={()=>{setOpen(false);window.dispatchEvent(new CustomEvent('simply-poker:data-action',{detail:'jira'}));}}><Link2 size={16}/><span>Import from JIRA</span></button>
+        <button className="profile-menu-item" onClick={()=>{setOpen(false);window.dispatchEvent(new CustomEvent('simply-poker:data-action',{detail:'export'}));}}><Download size={16}/><span>Export to CSV</span></button>
+      </>}
       {showLanguages&&<div className="language-modal-inline" role="dialog" aria-label="Choose language">
         <div className="language-modal-heading"><strong>Choose your language</strong><button type="button" onClick={()=>setShowLanguages(false)} aria-label="Close"><X size={16}/></button></div>
         <div className="language-options">{LANGUAGES.map(([code,label,flag])=><button type="button" key={code} className={pendingLanguage===code?'selected':''} onClick={()=>setPendingLanguage(code)}><span>{flag}</span><span>{label}</span><small>{code.toUpperCase()}</small></button>)}</div>
