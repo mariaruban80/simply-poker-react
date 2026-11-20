@@ -861,3 +861,41 @@
 
 @scope (.legacy-landing) { :scope .legacy-header{display:flex!important;flex-direction:row!important;justify-content:space-between!important;align-items:center!important;width:100%!important} :scope .header-buttons{display:flex!important;flex-direction:row!important;justify-content:flex-end!important;align-items:center!important;margin-left:auto!important;width:auto!important} :scope .header-buttons .button{width:auto!important;flex:0 0 auto!important} :scope .team-member.member-selected{background-color:var(--primary)!important;color:#fff!important;transform:scale(1.1)!important;box-shadow:0 6px 16px rgba(103,58,183,.28)!important} :scope .estimate-bubble.visible{opacity:1!important;transform:scale(1)!important} :scope .central-node.pulse{animation:poker-pulse .6s ease-in-out}@keyframes poker-pulse{0%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.15)}100%{transform:translate(-50%,-50%) scale(1)}} }
 @media(max-width:768px){@scope (.legacy-landing){:scope .legacy-header{flex-direction:column!important;align-items:stretch!important}:scope .header-buttons{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;width:100%!important;margin-left:0!important}:scope .header-buttons .button{width:100%!important}}}
+
+
+/* Landing illustration: preserve the original purple selection and reveal effects. */
+.legacy-landing .team-member.member-selected {
+  background-color: #673ab7 !important;
+  color: #ffffff !important;
+  border: 2px solid #5c33a4 !important;
+  box-shadow: 0 6px 18px rgba(103, 58, 183, 0.38) !important;
+  transform: scale(1.12) !important;
+  z-index: 8;
+}
+.legacy-landing .team-member:not(.member-selected) {
+  background-color: #ffffff;
+  color: #673ab7;
+}
+.legacy-landing .team-member:not(.member-selected):hover {
+  background-color: #673ab7;
+  color: #ffffff;
+}
+.legacy-landing .estimate-bubble.visible {
+  opacity: 1 !important;
+  transform: scale(1) !important;
+  background-color: #ffffff;
+  color: #673ab7;
+  border: 1px solid rgba(103, 58, 183, 0.12);
+}
+.legacy-landing .central-node {
+  background: linear-gradient(135deg, #673ab7 0%, #9c27b0 100%) !important;
+  color: #ffffff !important;
+}
+.legacy-landing .central-node.pulse {
+  animation: poker-pulse .6s ease-in-out;
+}
+@keyframes poker-pulse {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.15); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
