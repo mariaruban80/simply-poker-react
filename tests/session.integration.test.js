@@ -45,6 +45,22 @@ function waitForEvent(socket, eventName, predicate = () => true, timeoutMs = 800
   });
 }
 
+function expectNoEvent(socket, eventName, action, timeoutMs = 250) {
+  return new Promise((resolve, reject) => {
+    const handler = () => {
+      clearTimeout(timer);
+      socket.off(eventName, handler);
+      reject(new Error(`Unexpected Socket.IO event: ${eventName}`));
+    };
+    const timer = setTimeout(() => {
+      socket.off(eventName, handler);
+      resolve();
+    }, timeoutMs);
+    socket.on(eventName, handler);
+    action();
+  });
+}
+
 function emitAck(socket, eventName, payload) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(`No acknowledgement for ${eventName}`)), 8000);
@@ -100,10 +116,26 @@ test('two participants can join, share stories, vote, reveal, reset and transfer
   const state = await initialState;
   assert.deepEqual(state.tickets, []);
 
+  const blockedStory = { id: 'story-e2e-blocked', text: 'Should not be added by a guest', points: '?' };
+  await expectNoEvent(guest, 'addTicket', () => guest.emit('addTicket', blockedStory));
+
+  const permissionUpdate = waitForEvent(guest, 'sessionPermissionsUpdate');
+  host.emit('setSessionPermissions', { allowMemberManage: true });
+  assert.equal((await permissionUpdate).allowMemberManage, true);
+
   const story = { id: 'story-e2e-1', text: 'Integration test story', points: '?' };
-  const storyAdded = waitForEvent(guest, 'addTicket', (payload) => payload.ticketData?.id === story.id);
-  host.emit('addTicket', story);
+  const storyAdded = waitForEvent(host, 'addTicket', (payload) => payload.ticketData?.id === story.id);
+  guest.emit('addTicket', story);
   assert.equal((await storyAdded).ticketData.text, story.text);
+
+  const pointsUpdated = waitForEvent(guest, 'storyPointsUpdate', (payload) => payload.storyId === story.id);
+  guest.emit('updateStoryPoints', { storyId: story.id, points: '8' });
+  assert.equal((await pointsUpdated).points, '8');
+
+  const restoredState = waitForEvent(guest, 'resyncState');
+  guest.emit('requestFullStateResync');
+  const stateAfterPoints = await restoredState;
+  assert.equal(stateAfterPoints.storyPoints[story.id], '8');
 
   const voteReceived = waitForEvent(host, 'voteUpdate', (payload) => payload.storyId === story.id);
   guest.emit('castVote', {
@@ -111,6 +143,7 @@ test('two participants can join, share stories, vote, reveal, reset and transfer
   });
   assert.equal((await voteReceived).vote, '5');
 
+  await expectNoEvent(guest, 'votesRevealed', () => guest.emit('revealVotes', { storyId: story.id }));
   const revealed = waitForEvent(guest, 'votesRevealed', (payload) => payload.storyId === story.id);
   host.emit('revealVotes', { storyId: story.id });
   assert.equal((await revealed).storyId, story.id);
