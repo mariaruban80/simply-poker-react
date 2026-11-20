@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Clock3, MessageSquareText, UserCircle, X } from 'lucide-react';
+import { Clock3, MessageSquareText, UserCircle, X, Languages, ShieldCheck, Upload, Download, Link2, LogOut } from 'lucide-react';
 
 const LANGUAGES = [
   ['en','English','🇬🇧'],['es','Español','🇪🇸'],['fr','Français','🇫🇷'],['de','Deutsch','🇩🇪'],['it','Italiano','🇮🇹'],
@@ -76,17 +76,17 @@ export function ProfileMenu({ userName, isHost, onLeave, onNotice, onToggleHost 
     <button className="profile-trigger" onClick={()=>setOpen(v=>!v)} aria-expanded={open} aria-label={`Profile menu for ${userName||'User'}`}><span className="legacy-avatar">{(userName||'U').slice(0,1).toUpperCase()}</span><span className="profile-trigger-name">{userName||'User'}</span><span className="profile-trigger-chevron">⌄</span></button>
     {open&&<div className="profile-dropdown">
       <div className="profile-menu-heading"><span className="profile-menu-avatar">{(userName||'U').slice(0,1).toUpperCase()}</span><span><strong>{userName||'User'}</strong><small>{isHost?'Session host':'Session participant'}</small></span></div>
-      <button onClick={()=>setShowLanguages(v=>!v)}><span>🇬🇧 Change language</span><span>{LANGUAGES.find(x=>x[0]===language)?.[1]||'English'}</span></button>
-      <button onClick={()=>{onToggleHost?.();setOpen(false);}}><span>Host mode</span><span className={isHost?'profile-status-on':'profile-status-off'}>{isHost?'On':'Off'}</span></button>
-      <button onClick={()=>{window.dispatchEvent(new CustomEvent('simply-poker:data-action',{detail:'csv'}));setOpen(false);}}><span>⇧ Import from CSV</span></button>
-      <button onClick={()=>{window.dispatchEvent(new CustomEvent('simply-poker:data-action',{detail:'jira'}));setOpen(false);}}><span>↗ Import from JIRA</span></button>
-      <button onClick={()=>{window.dispatchEvent(new CustomEvent('simply-poker:data-action',{detail:'export'}));setOpen(false);}}><span>⇩ Export to CSV</span></button>
+      <button className="profile-menu-item" onClick={()=>setShowLanguages(v=>!v)}><Languages size={16}/><span>Change language</span><small>{LANGUAGES.find(x=>x[0]===language)?.[1]||'English'}</small></button>
+      <button className="profile-menu-item" onClick={()=>{onToggleHost?.();setOpen(false);}}><ShieldCheck size={16}/><span>{isHost?'Release host':'Request host access'}</span><small className={isHost?'profile-status-on':'profile-status-off'}>{isHost?'Host':'Participant'}</small></button>
+      <button className="profile-menu-item" onClick={()=>{window.dispatchEvent(new CustomEvent('simply-poker:data-action',{detail:'csv'}));setOpen(false);}}><Upload size={16}/><span>Import from CSV</span></button>
+      <button className="profile-menu-item" onClick={()=>{window.dispatchEvent(new CustomEvent('simply-poker:data-action',{detail:'jira'}));setOpen(false);}}><Link2 size={16}/><span>Import from JIRA</span></button>
+      <button className="profile-menu-item" onClick={()=>{window.dispatchEvent(new CustomEvent('simply-poker:data-action',{detail:'export'}));setOpen(false);}}><Download size={16}/><span>Export to CSV</span></button>
       {showLanguages&&<div className="language-modal-inline" role="dialog" aria-label="Choose language">
         <div className="language-modal-heading"><strong>Choose your language</strong><button type="button" onClick={()=>setShowLanguages(false)} aria-label="Close"><X size={16}/></button></div>
         <div className="language-options">{LANGUAGES.map(([code,label,flag])=><button type="button" key={code} className={pendingLanguage===code?'selected':''} onClick={()=>setPendingLanguage(code)}><span>{flag}</span><span>{label}</span><small>{code.toUpperCase()}</small></button>)}</div>
         <button className="language-apply" disabled={translating} onClick={applyLanguage}>{translating?'Translating…':'Apply language'}</button>
       </div>}
-      <button className="profile-leave" onClick={onLeave}>Leave session</button>
+      <button className="profile-menu-item profile-leave" onClick={onLeave}><LogOut size={16}/><span>Leave session</span></button>
     </div>}
   </div>;
 }
