@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../landing.css';
 
@@ -26,9 +26,18 @@ export default function LandingPage() {
   const [scale, setScale] = useState('fibonacci');
   const [allowManage, setAllowManage] = useState(false);
   const [requestHost, setRequestHost] = useState(false);
-  const [selectedMember, setSelectedMember] = useState(0);
+  const [selectedMember, setSelectedMember] = useState(-1);
   const [showAll, setShowAll] = useState(false);
   const [error, setError] = useState('');
+  const [pulse, setPulse] = useState(false);
+  useEffect(() => {
+    const steps = [0, 2, 4, 'all'];
+    const ids = steps.map((step, i) => setTimeout(() => {
+      if (step === 'all') { setShowAll(true); setSelectedMember(-1); setPulse(true); setTimeout(() => setPulse(false), 650); }
+      else { setSelectedMember(step); setShowAll(false); }
+    }, 1000 + i * 800));
+    return () => ids.forEach(clearTimeout);
+  }, []);
 
   function submit(event) {
     event.preventDefault();
@@ -94,7 +103,7 @@ export default function LandingPage() {
                   );
                 })}
                 {!showAll && <div className="estimate-bubble visible selected-estimate" style={{ left: `calc(50% + ${Math.cos((selectedMember * 45 - 90) * Math.PI / 180) * 105}px - 20px)`, top: `calc(50% + ${Math.sin((selectedMember * 45 - 90) * Math.PI / 180) * 105}px - 15px)` }}>{members[selectedMember].estimate}</div>}
-                <button type="button" className="central-node" onClick={() => setShowAll(value => !value)}>Planning<br />Poker</button>
+                <button type="button" className={`central-node ${pulse ? 'pulse' : ''}`} onClick={() => { setShowAll(value => !value); setSelectedMember(-1); setPulse(true); setTimeout(() => setPulse(false), 650); }}>Planning<br />Poker</button>
               </div>
               <p className="feature-text">Create a <span>collaborative environment</span> where team members can estimate together in real-time</p>
             </div>
