@@ -123,10 +123,18 @@ test('two participants can join, share stories, vote, reveal, reset and transfer
   host.emit('setSessionPermissions', { allowMemberManage: true });
   assert.equal((await permissionUpdate).allowMemberManage, true);
 
+  const scaleChanged = waitForEvent(guest, 'votingSystemUpdate');
+  host.emit('votingSystemSelected', { roomId, votingSystem: 'shortFib' });
+  assert.equal((await scaleChanged).votingSystem, 'shortFib');
+
   const story = { id: 'story-e2e-1', text: 'Integration test story', points: '?' };
   const storyAdded = waitForEvent(host, 'addTicket', (payload) => payload.ticketData?.id === story.id);
   guest.emit('addTicket', story);
   assert.equal((await storyAdded).ticketData.text, story.text);
+
+  const storyUpdated = waitForEvent(guest, 'updateTicket', (payload) => payload.ticketData?.id === story.id);
+  guest.emit('updateTicket', { ...story, text: 'Updated integration story' });
+  assert.equal((await storyUpdated).ticketData.text, 'Updated integration story');
 
   const pointsUpdated = waitForEvent(guest, 'storyPointsUpdate', (payload) => payload.storyId === story.id);
   guest.emit('updateStoryPoints', { storyId: story.id, points: '8' });
@@ -136,6 +144,8 @@ test('two participants can join, share stories, vote, reveal, reset and transfer
   guest.emit('requestFullStateResync');
   const stateAfterPoints = await restoredState;
   assert.equal(stateAfterPoints.storyPoints[story.id], '8');
+  assert.equal(stateAfterPoints.allowMemberManage, true);
+  assert.equal(stateAfterPoints.votingSystem, 'shortFib');
 
   const voteReceived = waitForEvent(host, 'voteUpdate', (payload) => payload.storyId === story.id);
   guest.emit('castVote', {
@@ -154,6 +164,10 @@ test('two participants can join, share stories, vote, reveal, reset and transfer
   const reset = waitForEvent(guest, 'votesReset', (payload) => payload.storyId === story.id);
   host.emit('resetVotes', { storyId: story.id });
   assert.equal((await reset).storyId, story.id);
+
+  const deleted = waitForEvent(guest, 'deleteStory', (payload) => payload.storyId === story.id);
+  host.emit('deleteStory', { storyId: story.id });
+  assert.equal((await deleted).storyId, story.id);
 
   const released = waitForEvent(guest, 'hostReleased');
   host.emit('releaseHost', { sessionId: roomId });
