@@ -126,6 +126,13 @@ test('two participants can join, share stories, vote, reveal, reset and transfer
   host.emit('setSessionPermissions', { allowMemberManage: true });
   assert.equal((await permissionUpdate).allowMemberManage, true);
 
+  // CSV import/export remains host-only even when member story management is enabled.
+  await expectNoEvent(host, 'syncCSVData', () => guest.emit('syncCSVData', [{ id: 'guest-import', text: 'Not allowed' }]));
+  const importedCsv = waitForEvent(guest, 'syncCSVData', (payload) => Array.isArray(payload) && payload[0]?.id === 'host-import');
+  host.emit('syncCSVData', [{ id: 'host-import', text: 'Host import' }]);
+  assert.equal((await importedCsv)[0].id, 'host-import');
+  await expectNoEvent(guest, 'exportData', () => guest.emit('exportVotes'));
+
   const scaleChanged = waitForEvent(guest, 'votingSystemUpdate');
   host.emit('votingSystemSelected', { roomId, votingSystem: 'tshirt' });
   assert.equal((await scaleChanged).votingSystem, 'tshirt');
