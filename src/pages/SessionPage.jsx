@@ -128,6 +128,10 @@ export default function SessionPage() {
         }
         if (type === 'votesRevealed' && payload.storyId) {
           setRevealedStories((old) => ({ ...old, [payload.storyId]: true }));
+          if (payload.points !== undefined && payload.points !== '?') {
+            setStoryPoints((old) => ({ ...old, [payload.storyId]: payload.points }));
+            setTickets((old) => old.map((ticket) => ticket.id === payload.storyId ? { ...ticket, points: payload.points } : ticket));
+          }
         }
         if (type === 'votesReset' && payload.storyId) {
           setRevealedStories((old) => ({ ...old, [payload.storyId]: false }));
