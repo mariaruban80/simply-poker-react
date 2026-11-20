@@ -510,9 +510,11 @@ console.log(`[SERVER] New client connected: ${socket.id}`);
 
     // Send response back to client
     if (callback) {
-      callback({ 
-        isHost: isHost,
-        reason: (!isHost && currentHost) ? 'Host already exists' : undefined
+      callback({
+        isHost,
+        reason: (!isHost && currentHost) ? 'Host already exists' : undefined,
+        votingSystem: roomVotingSystems[sessionId] || null,
+        allowMemberManage: rooms[sessionId] ? Boolean(rooms[sessionId].allowMemberManage) : null
       });
     }
   });
