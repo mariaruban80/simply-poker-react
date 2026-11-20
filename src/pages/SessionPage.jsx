@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Copy, Eye, Pencil, Plus, RotateCcw, Spade, Trash2, Users, Wifi, WifiOff } from 'lucide-react';
+import { CheckCircle2, Copy, Eye, Pencil, Plus, RotateCcw, Spade, Trash2, Users, Wifi, WifiOff } from 'lucide-react';
 import { connectToRoom } from '../services/roomSocket.js';
 import DataImportExport from '../components/DataImportExport.jsx';
 import { ProfileMenu, SessionTimer, FeedbackWidget } from '../components/SessionTools.jsx';
@@ -266,6 +266,19 @@ export default function SessionPage() {
     const member = users.find((person) => person.id === id);
     return { id, name: member?.name || 'Participant', value };
   });
+  const voteFrequency = Object.values(votes).reduce((counts, value) => {
+    const key = String(value);
+    counts[key] = (counts[key] || 0) + 1;
+    return counts;
+  }, {});
+  const mostCommonVote = Object.entries(voteFrequency).sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
+  const numericVotes = Object.values(votes).map((value) => value === '½' ? 0.5 : Number(value)).filter(Number.isFinite);
+  const averageVote = numericVotes.length
+    ? (numericVotes.reduce((sum, value) => sum + value, 0) / numericVotes.length).toFixed(1)
+    : '—';
+  const agreement = Object.keys(votes).length
+    ? Math.round((Math.max(0, ...Object.values(voteFrequency)) / Object.keys(votes).length) * 100)
+    : 0;
 
   return (
     <div className="room-shell">
@@ -283,7 +296,7 @@ export default function SessionPage() {
         <aside className="room-sidebar">
           <div className="side-heading"><Users size={18} /><h3>Team members</h3><span>{users.length}</span></div>
           <ul className="member-list">{users.map((person, index) => (
-            <li key={person.id || index}><span className="avatar">{(person.name || '?').slice(0, 1).toUpperCase()}</span><span>{person.name || 'Member'}</span>{person.id === window.roomSocket?.id && <small>YOU</small>}</li>
+            <li key={person.id || index}><span className="avatar">{(person.name || '?').slice(0, 1).toUpperCase()}</span><span>{person.name || 'Member'}</span>{person.id === window.roomSocket?.id && <small>YOU</small>}{votes[person.id] !== undefined && <small className="member-voted" title={revealed ? `Voted ${votes[person.id]}` : 'Vote submitted'}>{revealed ? String(votes[person.id]) : <CheckCircle2 size={15} aria-label="Voted" />}</small>}</li>
           ))}</ul>
           <div className="sidebar-room-id"><small>SESSION ID</small><strong>{roomId}</strong><button onClick={copy}><Copy size={13} /> Copy invite</button></div>
         </aside>
@@ -327,7 +340,16 @@ export default function SessionPage() {
             }} /> Allow participants to manage stories and import data</label>
             <button className="action-secondary" onClick={reset}><RotateCcw size={16} /> Reset votes</button><button className="action-primary" onClick={reveal}><Eye size={16} /> Reveal votes</button>
           </div>}
-          {revealed && <section className="results-panel"><h3>Voting results</h3><div className="result-chips">{visibleVotes.map((item) => <span key={item.id}>{item.name}: <b>{String(item.value)}</b></span>)}</div></section>}
+          {revealed && <section className="results-panel">
+            <h3>Voting results</h3>
+            <div className="result-summary">
+              <div><small>Votes</small><strong>{visibleVotes.length}</strong></div>
+              <div><small>Most common</small><strong>{mostCommonVote}</strong></div>
+              <div><small>Average</small><strong>{averageVote}</strong></div>
+              <div><small>Agreement</small><strong>{agreement}%</strong></div>
+            </div>
+            <div className="result-chips">{visibleVotes.map((item) => <span key={item.id}>{item.name}: <b>{String(item.value)}</b></span>)}</div>
+          </section>}
         </section>
       </main>
       <FeedbackWidget />
