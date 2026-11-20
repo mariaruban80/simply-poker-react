@@ -447,3 +447,20 @@
  .legacy-session .profile-trigger{padding-right:4px}
  .legacy-session .legacy-invite{width:auto;min-width:0}
 }
+
+/* Host conflict dialog, matching original purple modal treatment */
+.legacy-session .legacy-host-modal{text-align:center;max-width:440px}
+.legacy-session .legacy-host-icon{width:52px;height:52px;margin:2px auto 12px;border-radius:50%;display:grid;place-items:center;background:#f0e6ff;color:#673ab7;font-size:25px}
+.legacy-session .legacy-host-modal p{color:#665d70;line-height:1.55;font-size:13px}
+.legacy-session .legacy-host-modal .legacy-modal-actions{justify-content:center;flex-wrap:wrap}
+.legacy-session .legacy-host-modal .legacy-modal-actions button{min-width:150px}
+.legacy-session .legacy-modal-field input:focus,.legacy-session .legacy-modal-field textarea:focus{outline:none;border-color:#673ab7;box-shadow:0 0 0 3px #673ab71a}
+.legacy-session .legacy-modal-field textarea{min-height:110px;resize:vertical;line-height:1.5}
+.legacy-session .legacy-add-modal form{display:flex;flex-direction:column;gap:12px}
+.legacy-session .legacy-modal-actions .legacy-primary{background:#673ab7;color:#fff;border:1px solid #673ab7}
+.legacy-session .legacy-modal-actions .legacy-primary:hover{background:#542c9d}
+.legacy-session .legacy-modal-actions .legacy-secondary{background:#f7f5fa;color:#574b65;border:1px solid #e4deec}
+@media(max-width:700px){
+ .legacy-session .legacy-host-modal .legacy-modal-actions{flex-direction:column}
+ .legacy-session .legacy-host-modal .legacy-modal-actions button{width:100%}
+}
