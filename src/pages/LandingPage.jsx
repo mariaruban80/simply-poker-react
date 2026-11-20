@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './landing.css';
+import '../landing.css';
 
 const scales = [
   ['fibonacci', 'Fibonacci (0, 1, 2, 3, 5, 8, 13, 21...)'],
