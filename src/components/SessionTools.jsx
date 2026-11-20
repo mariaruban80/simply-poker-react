@@ -78,6 +78,9 @@ export function ProfileMenu({ userName, isHost, onLeave, onNotice, onToggleHost 
       <div className="profile-menu-heading"><span className="profile-menu-avatar">{(userName||'U').slice(0,1).toUpperCase()}</span><span><strong>{userName||'User'}</strong><small>{isHost?'Session host':'Session participant'}</small></span></div>
       <button onClick={()=>setShowLanguages(v=>!v)}><span>🇬🇧 Change language</span><span>{LANGUAGES.find(x=>x[0]===language)?.[1]||'English'}</span></button>
       <button onClick={()=>{onToggleHost?.();setOpen(false);}}><span>Host mode</span><span className={isHost?'profile-status-on':'profile-status-off'}>{isHost?'On':'Off'}</span></button>
+      <button onClick={()=>{window.dispatchEvent(new CustomEvent('simply-poker:data-action',{detail:'csv'}));setOpen(false);}}><span>⇧ Import from CSV</span></button>
+      <button onClick={()=>{window.dispatchEvent(new CustomEvent('simply-poker:data-action',{detail:'jira'}));setOpen(false);}}><span>↗ Import from JIRA</span></button>
+      <button onClick={()=>{window.dispatchEvent(new CustomEvent('simply-poker:data-action',{detail:'export'}));setOpen(false);}}><span>⇩ Export to CSV</span></button>
       {showLanguages&&<div className="language-modal-inline" role="dialog" aria-label="Choose language">
         <div className="language-modal-heading"><strong>Choose your language</strong><button type="button" onClick={()=>setShowLanguages(false)} aria-label="Close"><X size={16}/></button></div>
         <div className="language-options">{LANGUAGES.map(([code,label,flag])=><button type="button" key={code} className={pendingLanguage===code?'selected':''} onClick={()=>setPendingLanguage(code)}><span>{flag}</span><span>{label}</span><small>{code.toUpperCase()}</small></button>)}</div>
