@@ -40,6 +40,7 @@ export default function SessionPage() {
   const [storyPoints, setStoryPoints] = useState({});
   const [notice, setNotice] = useState('');
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteCopied, setInviteCopied] = useState(false);
   const [addStoryOpen, setAddStoryOpen] = useState(false);
   const [newStoryId, setNewStoryId] = useState('');
   const [newStoryDescription, setNewStoryDescription] = useState('');
@@ -141,11 +142,11 @@ export default function SessionPage() {
         }
         if (type === 'sessionPermissionsUpdate') {
           setAllowMemberManage(Boolean(payload.allowMemberManage));
-          sessionStorage.setItem('allowMemberManage', String(Boolean(payload.allowMemberManage)));
+          sessionStorage.setItem(roomKey('allowMemberManage'), String(Boolean(payload.allowMemberManage)));
         }
         if (type === 'votingSystemUpdate' && payload.votingSystem) {
           setVotingSystem(payload.votingSystem);
-          sessionStorage.setItem('votingSystem', payload.votingSystem);
+          sessionStorage.setItem(roomKey('votingSystem'), payload.votingSystem);
         }
         if (type === 'storyPointsUpdate' && payload.storyId) {
           setStoryPoints((old) => ({ ...old, [payload.storyId]: payload.points }));
@@ -153,11 +154,11 @@ export default function SessionPage() {
         if (type === 'hostChanged') {
           const nowHost = payload.hostId === window.roomSocket?.id;
           setIsHost(nowHost);
-          sessionStorage.setItem('isHost', String(nowHost));
+          sessionStorage.setItem(roomKey('isHost'), String(nowHost));
         }
         if (type === 'hostLeft' || type === 'hostReleased') {
           setIsHost(false);
-          sessionStorage.setItem('isHost', 'false');
+          sessionStorage.setItem(roomKey('isHost'), 'false');
           setNotice('Host access is available. You can request to become the host.');
         }
       },
@@ -280,7 +281,7 @@ export default function SessionPage() {
       if (!response.allowed) { setHostConflictOpen(response.reason === 'Host already exists'); setNotice(response.reason || 'Host access could not be granted.'); }
       else {
         setIsHost(true);
-        sessionStorage.setItem('isHost', 'true');
+        sessionStorage.setItem(roomKey('isHost'), 'true');
         setNotice('You are now the session host.');
       }
     });
@@ -296,7 +297,7 @@ export default function SessionPage() {
 
   const inviteLink = window.location.origin + '/session/' + encodeURIComponent(roomId);
   async function copy() {
-    try { await navigator.clipboard.writeText(inviteLink); setNotice('Invite link copied.'); setInviteOpen(false); }
+    try { await navigator.clipboard.writeText(inviteLink); setInviteCopied(true); setNotice('Invite link copied.'); }
     catch { setNotice('Copy was unavailable. Select and copy the invite link from the dialog.'); }
   }
 
@@ -323,8 +324,8 @@ export default function SessionPage() {
     const name = inviteName.trim();
     if (!name) return;
     sessionStorage.setItem('userName', name);
-    sessionStorage.setItem('isHost', 'false');
-    sessionStorage.setItem('isRoomCreator', 'false');
+    sessionStorage.setItem(roomKey('isHost'), 'false');
+    sessionStorage.setItem(roomKey('requestedHost'), 'false');
     setUserName(name);
   }
 
@@ -344,7 +345,7 @@ export default function SessionPage() {
   return <div className="legacy-session">
     <header className="legacy-header">
       <a className="legacy-logo" href="/"><img src="/assets/about/spade_1.png" alt=""/> <span>Simply Poker</span></a>
-      <div className="legacy-nav"><span className={`legacy-connection ${connected?'online':'offline'}`}>{connected?<Wifi size={13}/>:<WifiOff size={13}/>} {status}</span><button className="legacy-invite" onClick={()=>setInviteOpen(true)}><Link2 size={15}/> Invite Others</button><div className="legacy-user"><span className="legacy-avatar">{(userName||'U').slice(0,1).toUpperCase()}</span>{userName||'User'}</div><SessionTimer onNotice={setNotice}/><ProfileMenu userName={userName} isHost={isHost} onNotice={setNotice} onToggleHost={()=>isHost?releaseHost():requestHost()} onLeave={()=>{sessionStorage.clear();navigate('/');}}/></div>
+      <div className="legacy-nav"><span className={`legacy-connection ${connected?'online':'offline'}`}>{connected?<Wifi size={13}/>:<WifiOff size={13}/>} {status}</span><button className="legacy-invite" onClick={()=>{setInviteCopied(false);setInviteOpen(true);}}><Link2 size={15}/> Invite Others</button><div className="legacy-user"><span className="legacy-avatar">{(userName||'U').slice(0,1).toUpperCase()}</span>{userName||'User'}</div><SessionTimer onNotice={setNotice}/><ProfileMenu userName={userName} isHost={isHost} onNotice={setNotice} onToggleHost={()=>isHost?releaseHost():requestHost()} onLeave={()=>{sessionStorage.clear();navigate('/');}}/></div>
     </header>
     <div className="legacy-session-toolbar"><div className="legacy-room-label"><small>ROOM</small><strong>{roomId}</strong></div><DataImportExport canManage={canManage} tickets={tickets} votesPerStory={votesPerStory} revealedStories={revealedStories} onImportStories={importStories} onNotice={setNotice} showToolbar={false}/></div>
     {notice&&<div className="legacy-notice" role="status">{notice}</div>}
@@ -361,7 +362,7 @@ export default function SessionPage() {
       <aside className="legacy-rightbar"><div className="legacy-search"><input type="search" value={storySearch} onChange={e=>setStorySearch(e.target.value)} placeholder="Search and filter tickets…"/>{storySearch?<button type="button" onClick={()=>setStorySearch('')} aria-label="Clear story search"><X size={16}/></button>:<span>⌕</span>}</div>{canManage&&<button className="legacy-add-ticket" onClick={()=>setAddStoryOpen(true)}><span>+</span> ADD TICKET</button>}<div className="legacy-story-list">{tickets.map((ticket,index)=>({ticket,index})).filter(({ticket})=>`${ticket.text||ticket.title||''} ${ticket.idDisplay||''}`.toLowerCase().includes(storySearch.toLowerCase())).map(({ticket,index})=><article key={ticket.id} className={`legacy-story-card ${index===selectedStory?'active':''}`} onClick={()=>selectStory(index)} onKeyDown={e=>{if(e.key==='Enter')selectStory(index);}} role="button" tabIndex={0}>{ticket.idDisplay&&<span className="legacy-story-id">{ticket.idDisplay}</span>}<div className="legacy-story-title">{ticket.text||ticket.title||'Untitled story'}</div><div className="legacy-story-meta"><span>👥 {Object.keys(votesPerStory[ticket.id]||{}).length} votes</span><strong>{storyPoints[ticket.id]??ticket.points??'?'}</strong></div>{canManage&&<div className="legacy-card-actions"><button onClick={e=>{e.stopPropagation();startEdit(ticket);}} aria-label="Edit"><Pencil size={13}/></button><button onClick={e=>{e.stopPropagation();deleteStory(ticket);}} aria-label="Delete"><Trash2 size={13}/></button></div>}</article>)}{!tickets.length&&<p className="legacy-muted">No stories have been added yet.</p>}</div><div className="legacy-navigation"><button onClick={()=>selectStory(selectedStory-1)} disabled={selectedStory<=0}>Previous Story</button><button onClick={()=>selectStory(selectedStory+1)} disabled={selectedStory>=tickets.length-1}>Next Story</button></div></aside>
     </main>
     {hostConflictOpen&&<div className="legacy-modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setHostConflictOpen(false);}}><section className="legacy-modal legacy-host-modal" role="dialog" aria-modal="true" aria-labelledby="host-conflict-title"><button className="legacy-modal-close" onClick={()=>setHostConflictOpen(false)} aria-label="Close"><X size={18}/></button><div className="legacy-host-icon">♟</div><h2 id="host-conflict-title">A host is already present</h2><p>Another participant currently manages this Planning Poker session. You can continue voting as a participant, or try requesting host access again if the host releases the role.</p><div className="legacy-modal-actions"><button className="legacy-secondary" onClick={()=>setHostConflictOpen(false)}>Continue as participant</button><button className="legacy-primary" onClick={()=>{setHostConflictOpen(false);requestHost();}}>Try again</button></div></section></div>}
-    {inviteOpen&&<div className="legacy-modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setInviteOpen(false);}}><section className="legacy-modal" role="dialog" aria-modal="true" aria-labelledby="invite-title"><button className="legacy-modal-close" onClick={()=>setInviteOpen(false)} aria-label="Close"><X size={18}/></button><h2 id="invite-title">Invite team members</h2><p>Share this link so others can join your Planning Poker session.</p><label className="legacy-modal-field">Session invite link<input readOnly value={inviteLink} onFocus={e=>e.target.select()}/></label><div className="legacy-modal-actions"><button className="legacy-secondary" onClick={()=>setInviteOpen(false)}>Close</button><button className="legacy-primary" onClick={copy}><Copy size={15}/> Copy link</button></div></section></div>}
+    {inviteOpen&&<div className="legacy-modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setInviteOpen(false);}}><section className="legacy-modal" role="dialog" aria-modal="true" aria-labelledby="invite-title"><button className="legacy-modal-close" onClick={()=>setInviteOpen(false)} aria-label="Close"><X size={18}/></button><h2 id="invite-title">Invite team members</h2><p>Share this link so others can join your Planning Poker session.</p><label className="legacy-modal-field">Session invite link<input readOnly value={inviteLink} onFocus={e=>e.target.select()}/></label><div className="legacy-modal-actions"><button className="legacy-secondary" onClick={()=>setInviteOpen(false)}>Close</button><button className="legacy-primary" onClick={copy}>{inviteCopied?'✓ Copied':'Copy link'} <Copy size={15}/></button></div></section></div>}
     {addStoryOpen&&<div className="legacy-modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setAddStoryOpen(false);}}><section className="legacy-modal legacy-add-modal" role="dialog" aria-modal="true" aria-labelledby="add-story-title"><button className="legacy-modal-close" onClick={()=>setAddStoryOpen(false)} aria-label="Close"><X size={18}/></button><h2 id="add-story-title">Add New Ticket</h2><form onSubmit={addStory}><label className="legacy-modal-field">Story ID (optional)<input value={newStoryId} onChange={e=>setNewStoryId(e.target.value)} placeholder="e.g. PROJ-123"/></label><label className="legacy-modal-field">Summary<input autoFocus required value={newTicket} onChange={e=>setNewTicket(e.target.value)} placeholder="Enter story summary"/></label><label className="legacy-modal-field">Description / Comment<RichTextEditor value={newStoryDescription} onChange={setNewStoryDescription} placeholder="Add story details or acceptance notes…"/></label><div className="legacy-modal-actions"><button type="button" className="legacy-secondary" onClick={()=>setAddStoryOpen(false)}>Cancel</button><button type="submit" className="legacy-primary">+ Add ticket</button></div></form></section></div>}
     {editingId&&tickets.find(ticket=>ticket.id===editingId)&&<div className="legacy-modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setEditingId(null);}}><section className="legacy-modal legacy-add-modal" role="dialog" aria-modal="true" aria-labelledby="edit-story-title"><button className="legacy-modal-close" onClick={()=>setEditingId(null)} aria-label="Close"><X size={18}/></button><h2 id="edit-story-title">Edit Story</h2><form onSubmit={e=>{e.preventDefault();saveEdit(tickets.find(ticket=>ticket.id===editingId));}}><label className="legacy-modal-field">Story ID<input value={editingStoryId} onChange={e=>setEditingStoryId(e.target.value)} placeholder="e.g. PROJ-123"/></label><label className="legacy-modal-field">Summary<input autoFocus required value={editingText} onChange={e=>setEditingText(e.target.value)} placeholder="Enter story summary"/></label><label className="legacy-modal-field">Description / Comment<RichTextEditor value={editingDescription} onChange={setEditingDescription} placeholder="Add story details or acceptance notes…"/></label><div className="legacy-modal-actions"><button type="button" className="legacy-secondary" onClick={()=>setEditingId(null)}>Cancel</button><button type="submit" className="legacy-primary">Save changes</button></div></form></section></div>}
     <FeedbackWidget/>
