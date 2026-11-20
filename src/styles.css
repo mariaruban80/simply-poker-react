@@ -123,3 +123,11 @@
 
 .permission-toggle{display:flex;align-items:center;gap:9px;flex:1;min-width:240px;font-size:13px;color:#554b66}
 .permission-toggle input{accent-color:#7046a3;width:16px;height:16px}
+
+
+.member-voted{display:inline-flex;align-items:center;justify-content:center;margin-left:auto;color:#27946b;font-weight:700;font-size:12px}
+.result-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
+.result-summary>div{display:flex;flex-direction:column;gap:5px;padding:12px;border:1px solid #e9e4f0;border-radius:10px;background:#faf9fc;min-width:0}
+.result-summary small{font-size:11px;color:#766d83}
+.result-summary strong{font-size:18px;color:#372b4b;overflow-wrap:anywhere}
+@media(max-width:560px){.result-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
