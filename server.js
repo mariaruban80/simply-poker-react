@@ -1881,9 +1881,33 @@ socket.on('castVote', ({ vote, targetUserId, storyId, userName }) => {
       
       // Store the revealed state
       rooms[roomId].votesRevealed[storyId] = true;
-      
-      // Broadcast to all clients
-      io.to(roomId).emit('votesRevealed', { storyId });
+
+      // Calculate a final estimate from the revealed votes. Numeric scales use
+      // the arithmetic mean; non-numeric scales use the most common card.
+      const storyVotes = Object.values(rooms[roomId].votesPerStory?.[storyId] || {});
+      const numericVotes = storyVotes
+        .map(value => value === '½' ? 0.5 : Number(value))
+        .filter(value => Number.isFinite(value));
+      let finalPoints = '?';
+      if (storyVotes.length && numericVotes.length === storyVotes.length) {
+        finalPoints = (numericVotes.reduce((sum, value) => sum + value, 0) / numericVotes.length).toFixed(1).replace(/\.0$/, '');
+      } else if (storyVotes.length) {
+        const frequency = storyVotes.reduce((counts, value) => {
+          const key = String(value);
+          counts[key] = (counts[key] || 0) + 1;
+          return counts;
+        }, {});
+        finalPoints = Object.entries(frequency).sort((a, b) => b[1] - a[1])[0][0];
+      }
+      if (finalPoints !== '?') {
+        if (!rooms[roomId].storyPoints) rooms[roomId].storyPoints = {};
+        rooms[roomId].storyPoints[storyId] = finalPoints;
+        const ticket = rooms[roomId].tickets?.find(item => item.id === storyId);
+        if (ticket) ticket.points = finalPoints;
+      }
+
+      // Broadcast reveal and final estimate to all clients.
+      io.to(roomId).emit('votesRevealed', { storyId, points: finalPoints });
     }
   });
 
