@@ -24,7 +24,7 @@ function downloadCsv(content, filename) {
   URL.revokeObjectURL(url);
 }
 
-export default function DataImportExport({ canManage, tickets, votesPerStory, revealedStories, onImportStories, onNotice }) {
+export default function DataImportExport({ canManage, tickets, votesPerStory, revealedStories, onImportStories, onNotice, showToolbar = true }) {
   const [modal, setModal] = useState('');
   const [csvFile, setCsvFile] = useState(null);
   const [csvStories, setCsvStories] = useState([]);
@@ -212,11 +212,11 @@ export default function DataImportExport({ canManage, tickets, votesPerStory, re
 
   return (
     <>
-      <div className="data-tools">
+      {showToolbar && <div className="data-tools">
         <button type="button" onClick={() => { setModal('csv'); setCsvError(''); }}><Upload size={15} /> Import CSV</button>
         <button type="button" onClick={() => setModal('export')}><Download size={15} /> Export CSV</button>
         <button type="button" onClick={() => { setModal('jira'); setJiraStatus(''); }}><Link2 size={15} /> Import from JIRA</button>
-      </div>
+      </div>}
 
       {modal && <div className="data-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeModal(); }}>
         <section className="data-modal" role="dialog" aria-modal="true" aria-labelledby="data-modal-title">
