@@ -73,16 +73,17 @@ export default function LandingPage() {
     sessionStorage.setItem('userName', name.trim());
     if (mode === 'create') {
       const id = crypto.randomUUID().replaceAll('-', '').slice(0, 8);
-      sessionStorage.setItem('sessionName', sessionName.trim());
-      sessionStorage.setItem('votingSystem', scale);
-      sessionStorage.setItem('allowMemberManage', String(allowManage));
-      sessionStorage.setItem('isHost', 'true');
-      sessionStorage.setItem('isRoomCreator', 'true');
+      sessionStorage.setItem(`simplyPoker:${id}:requestedHost`, 'true');
+      sessionStorage.setItem(`simplyPoker:${id}:sessionName`, sessionName.trim());
+      sessionStorage.setItem(`simplyPoker:${id}:votingSystem`, scale);
+      sessionStorage.setItem(`simplyPoker:${id}:allowMemberManage`, String(allowManage));
+      sessionStorage.setItem(`simplyPoker:${id}:isHost`, 'true');
+
       navigate('/session/' + id);
     } else {
-      sessionStorage.setItem('requestedHost', String(requestHost));
-      sessionStorage.setItem('isRoomCreator', 'false');
-      sessionStorage.setItem('isHost', 'false');
+      sessionStorage.setItem(`simplyPoker:${roomId.trim()}:requestedHost`, String(requestHost));
+
+      sessionStorage.setItem(`simplyPoker:${roomId.trim()}:isHost`, 'false');
       navigate('/session/' + encodeURIComponent(roomId.trim()));
     }
   }
