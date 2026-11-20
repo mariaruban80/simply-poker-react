@@ -104,11 +104,14 @@ test('two participants can join, share stories, vote, reveal, reset and transfer
   });
   assert.equal(hostRole.isHost, true);
   host.emit('joinRoom', { roomId, userName: 'Host Tester' });
+  host.emit('votingSystemSelected', { roomId, votingSystem: 'shortFib' });
 
   const guestRole = await emitAck(guest, 'joinSession', {
     sessionId: roomId, requestedHost: false, name: 'Guest Tester',
   });
   assert.equal(guestRole.isHost, false);
+  assert.equal(guestRole.votingSystem, 'shortFib');
+  assert.equal(guestRole.allowMemberManage, false);
   guest.emit('joinRoom', { roomId, userName: 'Guest Tester' });
 
   const initialState = waitForEvent(guest, 'resyncState');
@@ -124,8 +127,8 @@ test('two participants can join, share stories, vote, reveal, reset and transfer
   assert.equal((await permissionUpdate).allowMemberManage, true);
 
   const scaleChanged = waitForEvent(guest, 'votingSystemUpdate');
-  host.emit('votingSystemSelected', { roomId, votingSystem: 'shortFib' });
-  assert.equal((await scaleChanged).votingSystem, 'shortFib');
+  host.emit('votingSystemSelected', { roomId, votingSystem: 'tshirt' });
+  assert.equal((await scaleChanged).votingSystem, 'tshirt');
 
   const story = { id: 'story-e2e-1', text: 'Integration test story', points: '?' };
   const storyAdded = waitForEvent(host, 'addTicket', (payload) => payload.ticketData?.id === story.id);
@@ -145,7 +148,7 @@ test('two participants can join, share stories, vote, reveal, reset and transfer
   const stateAfterPoints = await restoredState;
   assert.equal(stateAfterPoints.storyPoints[story.id], '8');
   assert.equal(stateAfterPoints.allowMemberManage, true);
-  assert.equal(stateAfterPoints.votingSystem, 'shortFib');
+  assert.equal(stateAfterPoints.votingSystem, 'tshirt');
 
   const voteReceived = waitForEvent(host, 'voteUpdate', (payload) => payload.storyId === story.id);
   guest.emit('castVote', {
