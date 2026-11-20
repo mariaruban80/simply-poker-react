@@ -8,6 +8,7 @@ export function connectToRoom({ roomId, userName, onStatus, onEvent }) {
     reconnectionDelay: 1000,
   });
   window.roomSocket = socket;
+  const roomKey = (key) => `simplyPoker:${roomId}:${key}`;
 
   const events = [
     'userList', 'allTickets', 'resyncState', 'addTicket', 'updateTicket',
@@ -19,17 +20,16 @@ export function connectToRoom({ roomId, userName, onStatus, onEvent }) {
   events.forEach((eventName) => socket.on(eventName, (payload) => onEvent?.(eventName, payload || {})));
 
   const joinSession = () => {
-    const requestedHost = sessionStorage.getItem('requestedHost') === 'true'
-      || sessionStorage.getItem('isRoomCreator') === 'true';
+    const requestedHost = sessionStorage.getItem(roomKey('requestedHost')) === 'true';
     socket.emit('joinSession', { sessionId: roomId, requestedHost, name: userName }, (response = {}) => {
-      sessionStorage.setItem('isHost', String(Boolean(response.isHost)));
+      sessionStorage.setItem(roomKey('isHost'), String(Boolean(response.isHost)));
       onEvent?.('joinSessionResult', response);
       if (response.votingSystem) {
-        sessionStorage.setItem('votingSystem', response.votingSystem);
+        sessionStorage.setItem(roomKey('votingSystem'), response.votingSystem);
         onEvent?.('votingSystemUpdate', { votingSystem: response.votingSystem });
       }
       if (response.allowMemberManage !== null && response.allowMemberManage !== undefined) {
-        sessionStorage.setItem('allowMemberManage', String(Boolean(response.allowMemberManage)));
+        sessionStorage.setItem(roomKey('allowMemberManage'), String(Boolean(response.allowMemberManage)));
         onEvent?.('sessionPermissionsUpdate', { allowMemberManage: Boolean(response.allowMemberManage) });
       }
       socket.emit('joinRoom', { roomId, userName });
@@ -38,10 +38,10 @@ export function connectToRoom({ roomId, userName, onStatus, onEvent }) {
       if (response.isHost && !response.votingSystem) {
         socket.emit('votingSystemSelected', {
           roomId,
-          votingSystem: sessionStorage.getItem('votingSystem') || 'fibonacci',
+          votingSystem: sessionStorage.getItem(roomKey('votingSystem')) || 'fibonacci',
         });
       }
-      if (response.isHost && sessionStorage.getItem('allowMemberManage') === 'true' && response.allowMemberManage !== true) {
+      if (response.isHost && sessionStorage.getItem(roomKey('allowMemberManage')) === 'true' && response.allowMemberManage !== true) {
         socket.emit('setSessionPermissions', { allowMemberManage: true });
       }
     });
