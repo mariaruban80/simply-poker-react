@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Download, FileSpreadsheet, Link2, Search, Upload, X } from 'lucide-react';
 import { buildCsv, csvRowsToStories, parseCsv } from '../services/csv.js';
 import { searchJiraIssues, testJiraConnection } from '../services/jira.js';
@@ -45,6 +45,18 @@ export default function DataImportExport({ canManage, tickets, votesPerStory, re
   const [searchText, setSearchText] = useState('');
   const [jiraStatus, setJiraStatus] = useState('');
   const [jiraBusy, setJiraBusy] = useState(false);
+
+  useEffect(() => {
+    const handleMenuAction = (event) => {
+      const action = event.detail;
+      if (!['csv','jira','export'].includes(action)) return;
+      setModal(action);
+      setCsvError('');
+      setJiraStatus('');
+    };
+    window.addEventListener('simply-poker:data-action', handleMenuAction);
+    return () => window.removeEventListener('simply-poker:data-action', handleMenuAction);
+  }, []);
 
   const visibleIssues = useMemo(() => jiraIssues.filter((issue) =>
     (!statusFilter || issue.status === statusFilter)
