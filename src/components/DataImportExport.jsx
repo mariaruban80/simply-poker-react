@@ -24,7 +24,7 @@ function downloadCsv(content, filename) {
   URL.revokeObjectURL(url);
 }
 
-export default function DataImportExport({ isHost, tickets, votesPerStory, revealedStories, onImportStories, onNotice }) {
+export default function DataImportExport({ canManage, tickets, votesPerStory, revealedStories, onImportStories, onNotice }) {
   const [modal, setModal] = useState('');
   const [csvFile, setCsvFile] = useState(null);
   const [csvStories, setCsvStories] = useState([]);
@@ -51,7 +51,7 @@ export default function DataImportExport({ isHost, tickets, votesPerStory, revea
   const statusOptions = [...new Set(jiraIssues.map((issue) => issue.status))];
   const typeOptions = [...new Set(jiraIssues.map((issue) => issue.issueType))];
 
-  if (!isHost) return null;
+  if (!canManage) return null;
 
   function closeModal() {
     setModal('');
