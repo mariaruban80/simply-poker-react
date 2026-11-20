@@ -31,6 +31,16 @@ app.use(express.static(join(__dirname, 'public')));
 
 app.use(express.json());
 
+// Allow the Capacitor WebView origin to call this service's API endpoints.
+// The API uses no cookie-based authentication; browser clients remain same-origin.
+app.use('/api', (req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
 // Feedback email 
 
 app.post("/api/feedback", async (req, res) => {
