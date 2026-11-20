@@ -458,6 +458,13 @@ function restoreUserVotesToCurrentSocket(roomId, socket) {
 
 const sessionHosts = new Map(); // sessionId → hostSocketId
 
+function canManageSession(socket, roomId) {
+  return Boolean(roomId && (
+    sessionHosts.get(roomId) === socket.id
+    || rooms[roomId]?.allowMemberManage === true
+  ));
+}
+
 io.on("connection", (socket) => {
 console.log(`[SERVER] New client connected: ${socket.id}`);
 
@@ -632,7 +639,7 @@ socket.on('restoreUserVoteByUsername', ({ storyId, vote, userName }) => {
 // Handle ticket updates
 socket.on('updateTicket', (ticketData) => {
   const roomId = socket.data.roomId;
-  if (roomId && rooms[roomId] && ticketData.id) {
+  if (roomId && rooms[roomId] && ticketData.id && canManageSession(socket, roomId)) {
     console.log(`[SERVER] Updating ticket in room ${roomId}:`, ticketData.id);
     
     rooms[roomId].lastActivity = Date.now();
@@ -658,7 +665,7 @@ socket.on('updateStoryPoints', ({ storyId, points }) => {
     const senderSocketId = socket.id;
     console.log(`[SERVER] updateStoryPoints received from ${socket.data.userName || senderSocketId} in room ${roomId}: ${storyId} = ${points}`);
 
-    if (!roomId || !storyId) return;
+    if (!roomId || !storyId || !canManageSession(socket, roomId)) return;
 
 
     if (rooms[roomId]) {
@@ -1409,7 +1416,7 @@ socket.on('restoreUserVote', ({ storyId, vote }) => {
   // Handle ticket synchronization
 socket.on('addTicket', (ticketData) => {
   const roomId = socket.data.roomId;
-  if (!roomId || !rooms[roomId] || !ticketData?.id) return;
+  if (!roomId || !rooms[roomId] || !ticketData?.id || !canManageSession(socket, roomId)) return;
 
   console.log(`[SERVER] New ticket added to room ${roomId}:`, ticketData.id);
 
@@ -1483,7 +1490,7 @@ socket.on('addTicket', (ticketData) => {
   
   // Store the selected voting system for the room
   socket.on('votingSystemSelected', ({ roomId, votingSystem }) => {
-    if (roomId && votingSystem) {
+    if (roomId && votingSystem && canManageSession(socket, roomId)) {
       console.log(`[SERVER] Host selected voting system '${votingSystem}' for room ${roomId}`);
       
       // Update room activity timestamp
@@ -1501,7 +1508,7 @@ socket.on('addTicket', (ticketData) => {
   // Handle story deletion with improved error handling and vote preservation
   socket.on('deleteStory', ({ storyId, isCsvStory, csvIndex }) => {
     const roomId = socket.data.roomId;
-    if (!roomId || !rooms[roomId]) return;
+    if (!roomId || !rooms[roomId] || !canManageSession(socket, roomId)) return;
     
     console.log(`[SERVER] Deleting story ${storyId} in room ${roomId}`);
     
@@ -1844,7 +1851,7 @@ socket.on('castVote', ({ vote, targetUserId, storyId, userName }) => {
   // Handle vote revealing with improved persistence
   socket.on('revealVotes', ({ storyId }) => {
     const roomId = socket.data.roomId;
-    if (roomId && rooms[roomId]) {
+    if (roomId && rooms[roomId] && canManageSession(socket, roomId)) {
       console.log(`[SERVER] Revealing votes for story: ${storyId} in room ${roomId}`);
       
       // Update room activity timestamp
@@ -1875,7 +1882,7 @@ socket.on('castVote', ({ vote, targetUserId, storyId, userName }) => {
   // Handle vote reset for current story
 socket.on('resetVotes', ({ storyId }) => {
   const roomId = socket.data.roomId;
-  if (roomId && rooms[roomId]) {
+  if (roomId && rooms[roomId] && canManageSession(socket, roomId)) {
     // Update room activity timestamp
     rooms[roomId].lastActivity = Date.now();
 
