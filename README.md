@@ -1,17 +1,61 @@
 # Simply Poker React
 
-React/Vite front end migration with the existing Express + Socket.IO backend retained as the compatibility layer.
+React/Vite front end migration for Simply Poker. The existing Express + Socket.IO backend is retained as the compatibility layer. This repository is separate from the original `Simplypoker-Prod` repository.
 
 ## Development
-Run `npm install`, then start `npm run dev:server` and `npm run dev` in separate terminals. Vite proxies `/api` and `/socket.io` to port 3000.
+
+1. Install dependencies: `npm install`
+2. Start the backend: `npm run dev:server`
+3. Start Vite in a second terminal: `npm run dev`
+
+Vite proxies `/api` and `/socket.io` to the backend on port 3000.
 
 ## Production
-Run `npm run build` then `npm start`. Express serves `dist/` and retains existing API and Socket.IO handlers.
 
-## Migration increment 1
-- React/Vite application shell and responsive create/join flow.
-- Initial session page and Socket.IO adapter using existing event names.
-- Existing server logic retained as baseline.
-- Remaining: complete story management, voting/reveal/statistics, CSV/Jira import/export, profile/language, feedback, About, privacy and terms; verify event payloads and add integration tests.
+1. Build the React application: `npm run build`
+2. Start Express: `npm start`
 
-Never commit SMTP credentials, Jira API tokens, or other secrets. Use deployment environment variables.
+Express serves the production `dist/` bundle and retains the existing API and Socket.IO handlers.
+
+## Current migration coverage
+
+- React/Vite create and join session flow.
+- Host and guest roles, host release/request and transfer.
+- Shared session permissions for delegated story management.
+- Story create, update, delete, search and navigation.
+- CSV import with preview and CSV export.
+- JIRA project connection, JQL search, issue filtering and import.
+- Voting decks: Fibonacci, Short Fibonacci, T-Shirt, T-Shirt + Numbers and Custom.
+- Real-time voting, private vote indicators, reveal/reset, vote statistics and story points.
+- Reconnection and server-state restoration for stories, votes, voting scale, permissions and story points.
+- Profile menu, saved language preference, local session timer and feedback.
+- About/help page, Contact Us, Privacy Policy and Terms of Service dialogs.
+
+## Verification
+
+- `npm run build` — React production build.
+- `npm test` — Vitest unit tests.
+- `npm run test:integration` — two-client Socket.IO integration test covering joining, permissions, story CRUD, voting, reveal/reset and host transfer.
+- `node --check server.js` — server syntax validation.
+- CI runs a production dependency audit with `npm audit --omit=dev --audit-level=high`.
+
+## Deployment configuration
+
+Set `PORT` in the hosting environment.
+
+For feedback and Contact Us email delivery, configure either:
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`; or
+- `EMAIL_USER`, `EMAIL_PASS` for the Gmail transport.
+
+Also set `EMAIL_TO` to the intended feedback/contact recipient. Do not commit SMTP credentials, JIRA API tokens, or other secrets. JIRA credentials are supplied by the user when connecting and are not persisted by the React UI.
+
+## Items requiring final operational validation
+
+- Full interface translation is not yet implemented; the language selector currently saves the user's preference only.
+- The timer currently runs locally in the browser and is not synchronised between participants.
+- JIRA import must be tested with a real authorised Atlassian project and token.
+- Feedback and Contact Us email delivery must be verified using the production SMTP settings.
+- Privacy Policy and Terms text are draft notices and must be reviewed against the actual service, hosting, retention and ownership arrangements before publication.
+- Complete browser-based acceptance testing on desktop and mobile, then deploy to a staging environment before replacing production.
+
+The original `Simplypoker-Prod` repository is not modified by this migration.
