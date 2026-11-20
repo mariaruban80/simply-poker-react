@@ -1,3 +1,4 @@
+import { apiUrl } from '../services/api.js';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Spade, Users, ShieldCheck, FileText, Mail, X, ChevronDown } from 'lucide-react';
@@ -11,7 +12,7 @@ const faq=[
 ];
 export default function AboutPage(){
  const [faqOpen,setFaqOpen]=useState(0),[modal,setModal]=useState(''),[contact,setContact]=useState({name:'',email:'',feedback:''}),[sending,setSending]=useState(false),[status,setStatus]=useState('');
- async function sendContact(e){e.preventDefault();setSending(true);setStatus('');try{const r=await fetch('/api/contact',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(contact)});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Unable to send your message.');setStatus('Your message has been sent. Thank you.');setContact({name:'',email:'',feedback:''});}catch(err){setStatus(err.message);}finally{setSending(false);}}
+ async function sendContact(e){e.preventDefault();setSending(true);setStatus('');try{const r=await fetch(apiUrl('/api/contact'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(contact)});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Unable to send your message.');setStatus('Your message has been sent. Thank you.');setContact({name:'',email:'',feedback:''});}catch(err){setStatus(err.message);}finally{setSending(false);}}
  return <div className="about-page">
   <header className="about-header"><Link to="/start" className="brand"><span className="brand-mark"><Spade size={22} fill="currentColor"/></span>Simply Poker</Link><nav><a href="#how-it-works">How it works</a><a href="#features">Features</a><a href="#faq">FAQ</a></nav><Link to="/start" className="about-start">Start a session</Link></header>
   <section className="about-hero"><p className="eyebrow">COLLABORATIVE AGILE ESTIMATION</p><h1>Estimate projects with confidence.</h1><p>Bring your team together, make estimation discussions more engaging and reach a shared understanding — wherever your team works.</p><Link to="/start" className="about-cta">Start your session</Link></section>
