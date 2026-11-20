@@ -33,7 +33,7 @@ export default function LandingPage() {
   useEffect(() => {
     const steps = [0, 2, 4, 'all'];
     const ids = steps.map((step, i) => setTimeout(() => {
-      if (step === 'all') { setShowAll(true); setSelectedMember(-1); setPulse(true); setTimeout(() => setPulse(false), 650); }
+      if (step === 'all') { setShowAll(true); setSelectedMember(4); setPulse(true); setTimeout(() => setPulse(false), 650); }
       else { setSelectedMember(step); setShowAll(false); }
     }, 1000 + i * 800));
     return () => ids.forEach(clearTimeout);
@@ -93,7 +93,7 @@ export default function LandingPage() {
                   return (
                     <div key={member.name}>
                       <div className="connection-line" style={{ width: '130px', transform: `rotate(${angle}rad)` }} />
-                      {showAll && <div className="estimate-bubble visible" style={{ left: `calc(50% + ${Math.cos(angle) * 105}px - 20px)`, top: `calc(50% + ${Math.sin(angle) * 105}px - 15px)` }}>{member.estimate}</div>}
+                      {showAll && <div className="estimate-bubble visible" style={{ transitionDelay: `${index * 100}ms`, left: `calc(50% + ${Math.cos(angle) * 105}px - 20px)`, top: `calc(50% + ${Math.sin(angle) * 105}px - 15px)` }}>{member.estimate}</div>}
                       <button type="button" className={`team-member ${selectedMember === index ? 'member-selected' : ''}`}
                         style={{ left: `calc(50% + ${Math.cos(angle) * radius}px - 30px)`, top: `calc(50% + ${Math.sin(angle) * radius}px - 30px)` }}
                         onClick={() => { setSelectedMember(index); setShowAll(false); }} aria-label={`${member.name}, estimate ${member.estimate}`}>
