@@ -59,3 +59,36 @@ Also set `EMAIL_TO` to the intended feedback/contact recipient. Do not commit SM
 - Complete browser-based acceptance testing on desktop and mobile, then deploy to a staging environment before replacing production.
 
 The original `Simplypoker-Prod` repository is not modified by this migration.
+
+
+## Android and iOS apps (Capacitor)
+
+The web application remains the primary shared React codebase. Capacitor packages the built React app into native Android and iOS shells; it does not replace the existing web deployment or Express/Socket.IO server.
+
+### First-time native setup
+
+1. Install the project dependencies: `npm install`.
+2. Add the native projects once: `npx cap add android` and `npx cap add ios`.
+3. Install Android Studio for Android builds. iOS builds require macOS with Xcode.
+
+### Point mobile builds at the deployed Render service
+
+Create a local `.env.production.local` file (do not commit production secrets) and set both values to the public HTTPS URL of the Render web service:
+
+```dotenv
+VITE_API_BASE_URL=https://YOUR-RENDER-SERVICE.onrender.com
+VITE_PUBLIC_APP_URL=https://YOUR-RENDER-SERVICE.onrender.com
+```
+
+These values are read at build time. Then run:
+
+```bash
+npm run cap:sync
+npm run cap:open:android
+# or
+npm run cap:open:ios
+```
+
+For normal browser development, leave these variables unset: API requests and Socket.IO will continue to use the current same-origin setup. The mobile apps use the configured Render URL for API calls, live rooms, and copied invite links. The invite links remain ordinary web URLs, so recipients can join from a browser.
+
+The current native application identifier is `com.simplypoker.app`; confirm the permanent identifier before publishing to either app store. Native project generation and signing are local build steps and are not performed by GitHub source edits.
