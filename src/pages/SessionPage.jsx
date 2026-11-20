@@ -36,6 +36,7 @@ export default function SessionPage() {
   const [notice, setNotice] = useState('');
   const [hostRequestBusy, setHostRequestBusy] = useState(false);
   const [storySearch, setStorySearch] = useState('');
+  const [allowMemberManage, setAllowMemberManage] = useState(sessionStorage.getItem('allowMemberManage') === 'true');
 
   const active = tickets[selectedStory];
   const activeStoryIdRef = useRef(active?.id);
@@ -43,7 +44,7 @@ export default function SessionPage() {
   const cards = useMemo(() => scales[votingSystem] || scales.fibonacci, [votingSystem]);
   const revealed = Boolean(active && revealedStories[active.id]);
   const votes = active ? (votesPerStory[active.id] || {}) : {};
-  const canManage = isHost || sessionStorage.getItem('allowMemberManage') === 'true';
+  const canManage = isHost || allowMemberManage;
 
   const selectStory = useCallback((index, broadcast = true) => {
     if (index < 0 || index >= tickets.length) return;
@@ -73,6 +74,8 @@ export default function SessionPage() {
           setTickets(normaliseTickets(payload.tickets));
           setVotesPerStory(payload.votesPerStory || {});
           setRevealedStories(payload.votesRevealed || {});
+          setAllowMemberManage(Boolean(payload.allowMemberManage));
+          sessionStorage.setItem('allowMemberManage', String(Boolean(payload.allowMemberManage)));
           const idx = Math.max(0, Math.min(Number(payload.selectedIndex) || 0, (payload.tickets || []).length - 1));
           setSelectedStory(idx);
         }
@@ -112,6 +115,10 @@ export default function SessionPage() {
           setRevealedStories((old) => ({ ...old, [payload.storyId]: false }));
           setVotesPerStory((old) => ({ ...old, [payload.storyId]: {} }));
           setSelectedVote(null);
+        }
+        if (type === 'sessionPermissionsUpdate') {
+          setAllowMemberManage(Boolean(payload.allowMemberManage));
+          sessionStorage.setItem('allowMemberManage', String(Boolean(payload.allowMemberManage)));
         }
         if (type === 'votingSystemUpdate' && payload.votingSystem) {
           setVotingSystem(payload.votingSystem);
@@ -302,7 +309,15 @@ export default function SessionPage() {
             {isHost && <label className="status-label">Voting scale <select value={votingSystem} onChange={(event) => changeScale(event.target.value)}><option value="fibonacci">Fibonacci</option><option value="shortFib">Short Fibonacci</option><option value="tshirt">T-Shirt sizes</option><option value="tshirtNum">T-Shirt + numbers</option><option value="custom">Custom</option></select></label>}
             <div className="voting-cards">{cards.map((card) => <button key={card} className={`vote-card ${selectedVote === card ? 'chosen' : ''}`} onClick={() => vote(card)} disabled={!active || revealed}>{card}</button>)}</div>
           </section>
-          {isHost && <div className="host-actions"><button className="action-secondary" onClick={reset}><RotateCcw size={16} /> Reset votes</button><button className="action-primary" onClick={reveal}><Eye size={16} /> Reveal votes</button></div>}
+          {isHost && <div className="host-actions">
+            <label className="permission-toggle"><input type="checkbox" checked={allowMemberManage} onChange={(event) => {
+              const value = event.target.checked;
+              setAllowMemberManage(value);
+              sessionStorage.setItem('allowMemberManage', String(value));
+              window.roomSocket?.emit('setSessionPermissions', { allowMemberManage: value });
+            }} /> Allow participants to manage stories and import data</label>
+            <button className="action-secondary" onClick={reset}><RotateCcw size={16} /> Reset votes</button><button className="action-primary" onClick={reveal}><Eye size={16} /> Reveal votes</button>
+          </div>}
           {revealed && <section className="results-panel"><h3>Voting results</h3><div className="result-chips">{visibleVotes.map((item) => <span key={item.id}>{item.name}: <b>{String(item.value)}</b></span>)}</div></section>}
         </section>
       </main>
