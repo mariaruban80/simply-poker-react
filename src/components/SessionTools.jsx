@@ -2,23 +2,87 @@ import { useEffect, useState } from 'react';
 import { Clock3, MessageSquareText, UserCircle, X } from 'lucide-react';
 
 const LANGUAGES = [
-  ['en','English'],['es','Español'],['fr','Français'],['de','Deutsch'],['it','Italiano'],['pt','Português'],
-  ['ru','Русский'],['ja','日本語'],['ko','한국어'],['zh','中文'],['ar','العربية'],['hi','हिन्दी'],
-  ['nl','Nederlands'],['sv','Svenska'],['da','Dansk'],['no','Norsk'],['fi','Suomi'],['pl','Polski'],['tr','Türkçe'],['th','ไทย']
+  ['en','English','🇬🇧'],['es','Español','🇪🇸'],['fr','Français','🇫🇷'],['de','Deutsch','🇩🇪'],['it','Italiano','🇮🇹'],
+  ['pt','Português','🇵🇹'],['ru','Русский','🇷🇺'],['ja','日本語','🇯🇵'],['ko','한국어','🇰🇷'],['zh','中文','🇨🇳'],
+  ['ar','العربية','🇸🇦'],['hi','हिन्दी','🇮🇳'],['nl','Nederlands','🇳🇱'],['sv','Svenska','🇸🇪'],['da','Dansk','🇩🇰'],
+  ['no','Norsk','🇳🇴'],['fi','Suomi','🇫🇮'],['pl','Polski','🇵🇱'],['tr','Türkçe','🇹🇷'],['th','ไทย','🇹🇭']
 ];
+
+const originalText = new WeakMap();
+const originalPlaceholder = new WeakMap();
+
+async function translateOne(value, language) {
+  if (!value || language === 'en') return value;
+  try {
+    const response = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(value) + '&langpair=en|' + language);
+    const data = await response.json();
+    const translated = data?.responseData?.translatedText;
+    return translated && !/MYMEMORY WARNING/i.test(translated) ? translated : value;
+  } catch { return value; }
+}
+
+async function applyInterfaceLanguage(language) {
+  const root = document.querySelector('.legacy-session');
+  if (!root) return;
+  const excluded = '.no-translate,.legacy-user,.legacy-member-name,.legacy-table-name,.legacy-story-title,.legacy-current-story h2,.legacy-current-story p,input,textarea,select,option,script,style,[contenteditable="true"]';
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    const parent = node.parentElement;
+    const value = node.nodeValue?.trim();
+    if (!value || !parent || parent.closest(excluded)) continue;
+    nodes.push(node);
+  }
+  const placeholders = [...root.querySelectorAll('input[placeholder],textarea[placeholder]')].filter(el => !el.closest(excluded));
+  if (language === 'en') {
+    nodes.forEach(node => { if (originalText.has(node)) node.nodeValue = originalText.get(node); });
+    placeholders.forEach(el => { if (originalPlaceholder.has(el)) el.placeholder = originalPlaceholder.get(el); });
+    return;
+  }
+  const tasks = nodes.map(async node => {
+    if (!originalText.has(node)) originalText.set(node,node.nodeValue);
+    const translated = await translateOne(originalText.get(node),language);
+    if (translated) node.nodeValue = translated;
+  });
+  const placeholderTasks = placeholders.map(async el => {
+    if (!originalPlaceholder.has(el)) originalPlaceholder.set(el,el.placeholder);
+    const translated = await translateOne(originalPlaceholder.get(el),language);
+    if (translated) el.placeholder = translated;
+  });
+  for (let i=0;i<tasks.length;i+=8) await Promise.all(tasks.slice(i,i+8));
+  for (let i=0;i<placeholderTasks.length;i+=8) await Promise.all(placeholderTasks.slice(i,i+8));
+}
 
 export function ProfileMenu({ userName, isHost, onLeave, onNotice, onToggleHost }) {
   const [open,setOpen]=useState(false);
-  const [language,setLanguage]=useState(localStorage.getItem('selectedLanguage')||'en');
+  const [language,setLanguage]=useState('en');
+  const [pendingLanguage,setPendingLanguage]=useState('en');
   const [showLanguages,setShowLanguages]=useState(false);
-  function changeLanguage(value){setLanguage(value);localStorage.setItem('selectedLanguage',value);setShowLanguages(false);onNotice?.('Language preference saved. The React interface is currently English; translated labels are not yet available.');}
+  const [translating,setTranslating]=useState(false);
+  useEffect(()=>{const saved=localStorage.getItem('selectedLanguage')||'en';setLanguage(saved);setPendingLanguage(saved);if(saved!=='en')applyInterfaceLanguage(saved);},[]);
+  async function applyLanguage(){
+    setTranslating(true);
+    try {
+      await applyInterfaceLanguage(pendingLanguage);
+      setLanguage(pendingLanguage);
+      localStorage.setItem('selectedLanguage',pendingLanguage);
+      setShowLanguages(false);
+      onNotice?.(pendingLanguage==='en'?'Interface language set to English.':`Interface translated to ${LANGUAGES.find(x=>x[0]===pendingLanguage)?.[1]||pendingLanguage}. Some wording may depend on the translation service.`);
+    } catch { onNotice?.('Translation could not be completed. Please try again.'); }
+    finally { setTranslating(false); }
+  }
   return <div className="profile-tools">
     <button className="profile-trigger" onClick={()=>setOpen(v=>!v)} aria-expanded={open}><UserCircle size={19}/><span>{userName||'User'}</span></button>
     {open&&<div className="profile-dropdown">
-      <strong>{userName||'User'}</strong><small>{isHost?'Session host':'Session participant'}</small>
-      <button onClick={()=>setShowLanguages(v=>!v)}>Change language <span>{LANGUAGES.find(x=>x[0]===language)?.[1]||'English'}</span></button>
-      <button onClick={()=>{onToggleHost?.();setOpen(false);}}>Host mode <span>{isHost?'On':'Off'}</span></button>
-      {showLanguages&&<div className="language-options">{LANGUAGES.map(([code,label])=><button key={code} className={language===code?'selected':''} onClick={()=>changeLanguage(code)}>{label}</button>)}</div>}
+      <div className="profile-menu-heading"><span className="profile-menu-avatar">{(userName||'U').slice(0,1).toUpperCase()}</span><span><strong>{userName||'User'}</strong><small>{isHost?'Session host':'Session participant'}</small></span></div>
+      <button onClick={()=>setShowLanguages(v=>!v)}><span>🇬🇧 Change language</span><span>{LANGUAGES.find(x=>x[0]===language)?.[1]||'English'}</span></button>
+      <button onClick={()=>{onToggleHost?.();setOpen(false);}}><span>Host mode</span><span className={isHost?'profile-status-on':'profile-status-off'}>{isHost?'On':'Off'}</span></button>
+      {showLanguages&&<div className="language-modal-inline" role="dialog" aria-label="Choose language">
+        <div className="language-modal-heading"><strong>Choose your language</strong><button type="button" onClick={()=>setShowLanguages(false)} aria-label="Close"><X size={16}/></button></div>
+        <div className="language-options">{LANGUAGES.map(([code,label,flag])=><button type="button" key={code} className={pendingLanguage===code?'selected':''} onClick={()=>setPendingLanguage(code)}><span>{flag}</span><span>{label}</span><small>{code.toUpperCase()}</small></button>)}</div>
+        <button className="language-apply" disabled={translating} onClick={applyLanguage}>{translating?'Translating…':'Apply language'}</button>
+      </div>}
       <button className="profile-leave" onClick={onLeave}>Leave session</button>
     </div>}
   </div>;
