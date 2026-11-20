@@ -132,7 +132,7 @@ test('two participants can join, share stories, vote, reveal, reset and transfer
   guest.emit('addTicket', story);
   assert.equal((await storyAdded).ticketData.text, story.text);
 
-  const storyUpdated = waitForEvent(guest, 'updateTicket', (payload) => payload.ticketData?.id === story.id);
+  const storyUpdated = waitForEvent(host, 'updateTicket', (payload) => payload.ticketData?.id === story.id);
   guest.emit('updateTicket', { ...story, text: 'Updated integration story' });
   assert.equal((await storyUpdated).ticketData.text, 'Updated integration story');
 
