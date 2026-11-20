@@ -119,3 +119,7 @@
 .story-list-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .story-list-points{font-weight:700;color:#67439b}
 @media(max-width:640px){.story-list-panel{padding:14px}.story-list{max-height:220px}.story-list-item{padding:9px}.room-meta{flex-wrap:wrap}}
+
+
+.permission-toggle{display:flex;align-items:center;gap:9px;flex:1;min-width:240px;font-size:13px;color:#554b66}
+.permission-toggle input{accent-color:#7046a3;width:16px;height:16px}
