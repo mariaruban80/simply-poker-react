@@ -199,7 +199,7 @@ export default function SessionPage() {
     window.roomSocket?.emit('addTicket', ticketData);
     setTickets((old) => old.some((item) => item.id === ticketData.id) ? old : [...old, ticketData]);
     setNewTicket(''); setNewStoryId(''); setNewStoryDescription('');
-    setAddStoryOpen(false); setNotice('Story added.');
+    setAddStoryOpen(false);
   }
 
   function vote(value, targetUserId = window.roomSocket?.id) {
