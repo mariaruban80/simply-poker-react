@@ -289,7 +289,7 @@ export default function SessionPage() {
           <span className="room-code">Room: <b>{roomId}</b></span>
           <button className="icon-button" onClick={copy} aria-label="Copy invite link"><Copy size={17} /></button>
           {isHost ? <button className="action-secondary" onClick={releaseHost}>Release host</button> : <button className="action-secondary" onClick={requestHost} disabled={hostRequestBusy || !connected}>{hostRequestBusy ? 'Requesting…' : 'Request host'}</button>}
-          <SessionTimer /><ProfileMenu userName={userName} isHost={isHost} onLeave={() => { sessionStorage.clear(); navigate('/'); }} />
+          <SessionTimer /><ProfileMenu userName={userName} isHost={isHost} onNotice={setNotice} onLeave={() => { sessionStorage.clear(); navigate('/'); }} />
         </div>
       </header>
       <main className="room-layout">
