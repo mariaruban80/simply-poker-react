@@ -7,11 +7,11 @@ const LANGUAGES = [
   ['nl','Nederlands'],['sv','Svenska'],['da','Dansk'],['no','Norsk'],['fi','Suomi'],['pl','Polski'],['tr','Türkçe'],['th','ไทย']
 ];
 
-export function ProfileMenu({ userName, isHost, onLeave }) {
+export function ProfileMenu({ userName, isHost, onLeave, onNotice }) {
   const [open,setOpen]=useState(false);
   const [language,setLanguage]=useState(localStorage.getItem('selectedLanguage')||'en');
   const [showLanguages,setShowLanguages]=useState(false);
-  function changeLanguage(value){setLanguage(value);localStorage.setItem('selectedLanguage',value);setShowLanguages(false);}
+  function changeLanguage(value){setLanguage(value);localStorage.setItem('selectedLanguage',value);setShowLanguages(false);onNotice?.('Language preference saved. The React interface is currently English; translated labels are not yet available.');}
   return <div className="profile-tools">
     <button className="profile-trigger" onClick={()=>setOpen(v=>!v)} aria-expanded={open}><UserCircle size={19}/><span>{userName||'User'}</span></button>
     {open&&<div className="profile-dropdown">
