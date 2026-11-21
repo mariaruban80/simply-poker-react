@@ -7,7 +7,7 @@ if (!target || !/^https?:\/\//i.test(target)) {
   process.exit(2);
 }
 
-const stages = [5, 10];
+// Keep the live check deliberately small for the Render Free instance.\nconst stages = [5, 10];
 const timeoutMs = 120_000;
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
