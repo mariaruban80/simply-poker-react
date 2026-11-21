@@ -83,10 +83,14 @@ export default function SessionPage() {
         }
         if (type === 'allTickets') setTickets(normaliseTickets(payload.tickets));
         if (type === 'resyncState') {
-          setTickets(normaliseTickets(payload.tickets));
+          const savedPoints = payload.storyPoints || {};
+          setTickets(normaliseTickets(payload.tickets).map((ticket) => ({
+            ...ticket,
+            points: savedPoints[ticket.id] ?? ticket.points ?? '?',
+          })));
           setVotesPerStory(payload.votesPerStory || {});
           setRevealedStories(payload.votesRevealed || {});
-          setStoryPoints(payload.storyPoints || {});
+          setStoryPoints(savedPoints);
           if (payload.votingSystem) {
             setVotingSystem(payload.votingSystem);
             sessionStorage.setItem(roomKey('votingSystem'), payload.votingSystem);
