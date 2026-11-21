@@ -131,9 +131,11 @@ export default function SessionPage() {
         }
         if (type === 'votesRevealed' && payload.storyId) {
           setRevealedStories((old) => ({ ...old, [payload.storyId]: true }));
-          if (payload.points !== undefined && payload.points !== '?') {
-            setStoryPoints((old) => ({ ...old, [payload.storyId]: payload.points }));
-            setTickets((old) => old.map((ticket) => ticket.id === payload.storyId ? { ...ticket, points: payload.points } : ticket));
+          const finalPoints = payload.points ?? payload.finalPoints;
+          if (finalPoints !== undefined && finalPoints !== null && finalPoints !== '?') {
+            const points = String(finalPoints);
+            setStoryPoints((old) => ({ ...old, [payload.storyId]: points }));
+            setTickets((old) => old.map((ticket) => ticket.id === payload.storyId ? { ...ticket, points } : ticket));
           }
         }
         if (type === 'votesReset' && payload.storyId) {
@@ -150,7 +152,9 @@ export default function SessionPage() {
           sessionStorage.setItem(roomKey('votingSystem'), payload.votingSystem);
         }
         if (type === 'storyPointsUpdate' && payload.storyId) {
-          setStoryPoints((old) => ({ ...old, [payload.storyId]: payload.points }));
+          const points = String(payload.points ?? '?');
+          setStoryPoints((old) => ({ ...old, [payload.storyId]: points }));
+          setTickets((old) => old.map((ticket) => ticket.id === payload.storyId ? { ...ticket, points } : ticket));
         }
         if (type === 'hostChanged') {
           const nowHost = payload.hostId === window.roomSocket?.id;
