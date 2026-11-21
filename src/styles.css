@@ -566,3 +566,102 @@
   border-color: #fff;
   box-shadow: inset 0 0 0 7px #fff, inset 0 0 0 8px #fff;
 }
+
+/* Session workspace polish requested from the desktop reference */
+@media (min-width: 701px) {
+  .legacy-session .legacy-workspace {
+    margin-top: -38px;
+    padding-top: 0;
+  }
+  .legacy-session .legacy-sidebar,
+  .legacy-session .legacy-main,
+  .legacy-session .legacy-rightbar {
+    padding-top: 12px;
+  }
+  .legacy-session .legacy-current-story {
+    border-color: #fff;
+    box-shadow: 0 2px 8px rgba(48, 30, 70, .035);
+  }
+}
+.legacy-session .timer-trigger {
+  min-height: 40px;
+  padding: 0 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #e6deef;
+  border-radius: 10px;
+  background: #fff;
+  color: #5d4a78;
+  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .1px;
+  line-height: 1;
+  box-shadow: 0 1px 3px rgba(40, 20, 60, .035);
+}
+.legacy-session .timer-trigger:hover {
+  background: #faf7ff;
+  border-color: #cbb9e3;
+  color: #59349a;
+}
+.legacy-session .legacy-add-ticket {
+  min-height: 44px;
+  height: 44px;
+  margin: 2px 0 17px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: 1px solid #d9cbed;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #fff 0%, #faf7ff 100%);
+  color: #5b3298;
+  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: .35px;
+  box-shadow: 0 2px 5px rgba(45, 22, 75, .055);
+  transition: background .16s ease, border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+.legacy-session .legacy-add-ticket:hover {
+  background: #f3edfb;
+  border-color: #bca5dc;
+  box-shadow: 0 4px 12px rgba(67, 39, 103, .10);
+  transform: translateY(-1px);
+}
+.legacy-session .legacy-add-ticket:focus-visible {
+  outline: 3px solid #d5c5eb;
+  outline-offset: 2px;
+}
+.legacy-session .legacy-add-ticket span {
+  width: 21px;
+  height: 21px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #eee6f8;
+  color: #673ab7;
+  font-size: 18px;
+  line-height: 1;
+}
+.legacy-session .legacy-navigation button:disabled {
+  opacity: .48;
+  cursor: not-allowed;
+}
+@media (max-width: 700px) {
+  .legacy-session .legacy-workspace { margin-top: 0; }
+  .legacy-session .timer-trigger {
+    min-height: 36px;
+    padding: 0 10px;
+    font-size: 11px;
+    border-radius: 9px;
+  }
+  .legacy-session .legacy-add-ticket {
+    width: 100%;
+    min-height: 42px;
+    height: 42px;
+    margin: 0 0 12px;
+  }
+}
