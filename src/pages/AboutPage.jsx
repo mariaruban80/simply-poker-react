@@ -6,26 +6,8 @@ const originalAboutMarkup = "<header>\n    <div class=\"logo\">\n\n      <img sr
 
 export default function AboutPage() {
   useEffect(() => {
-    const stylesheetLinks = [
-      { id: 'simply-poker-about-fonts', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap' },
-      { id: 'simply-poker-about-icons', href: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css' },
-      { id: 'simply-poker-about-styles', href: '/About_style.css' }
-    ];
-    const added = [];
-    stylesheetLinks.forEach(({id,href}) => {
-      let link = document.getElementById(id);
-      if (!link) {
-        link = document.createElement('link');
-        link.id = id;
-        link.rel = 'stylesheet';
-        link.href = href;
-        document.head.appendChild(link);
-        added.push(link);
-      }
-    });
-
     const root = document.querySelector('.original-about-page');
-    if (!root) return () => added.forEach(link => link.remove());
+    if (!root) return;
 
     const originalOverflow = document.body.style.overflow;
     const get = selector => root.querySelector(selector);
@@ -136,7 +118,6 @@ export default function AboutPage() {
       observer?.disconnect();
       delete window.showScale;
       document.body.style.overflow = originalOverflow;
-      added.forEach(link => link.remove());
     };
   }, []);
 
