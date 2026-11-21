@@ -310,7 +310,6 @@ export default function SessionPage() {
       await navigator.clipboard.writeText(inviteLink);
       setInviteCopied(true);
       setInviteOpen(false);
-      setNotice('Invite link copied.');
     } catch {
       setNotice('Copy was unavailable. Select and copy the invite link from the dialog.');
     }
@@ -348,6 +347,7 @@ export default function SessionPage() {
     <div className="legacy-invite-join-card">
       <img src="/assets/about/spade_1.png" alt="" />
       <h1>Join Simply Poker session</h1>
+      <p>You've been invited to join Simply Poker session <strong>{roomId}</strong>. Enter your name to connect with the team.</p>
       <form onSubmit={joinFromInvite}>
         <label htmlFor="invite-join-name">Your name</label>
         <input id="invite-join-name" autoFocus value={inviteName} onChange={event=>setInviteName(event.target.value)} placeholder="Enter your name" maxLength={40} required />
