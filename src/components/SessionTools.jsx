@@ -109,6 +109,41 @@ export function SessionTimer({ onNotice }) {
 
 export function FeedbackWidget() {
   const [open,setOpen]=useState(false),[emoji,setEmoji]=useState(''),[message,setMessage]=useState(''),[email,setEmail]=useState(''),[status,setStatus]=useState(''),[busy,setBusy]=useState(false);
-  async function submit(){if(!emoji&&!message.trim()){setStatus('Please select an emoji or write feedback.');return;}setBusy(true);setStatus('');try{const r=await fetch('/api/feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({emoji,feedback:message,email})});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.error||'Could not send feedback.');setStatus('Thank you for your feedback.');setMessage('');setEmoji('');}catch(e){setStatus(e.message||'Something went wrong.');}finally{setBusy(false);}}
-  return <><button className="feedback-fab" onClick={()=>setOpen(true)}><MessageSquareText size={16}/> Feedback</button>{open&&<div className="data-modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setOpen(false);}}><section className="data-modal feedback-modal" role="dialog" aria-modal="true" aria-labelledby="feedback-title"><header className="data-modal-header"><h2 id="feedback-title">Share your feedback</h2><button className="data-modal-close" onClick={()=>setOpen(false)}><X size={18}/></button></header><div className="data-modal-body"><p className="data-help">How was your experience using Simply Poker?</p><div className="feedback-emojis">{['😞','😐','🙂','😊','😍'].map(x=><button className={emoji===x?'chosen':''} key={x} onClick={()=>setEmoji(x)}>{x}</button>)}</div><label className="feedback-label">Your feedback<textarea rows="4" value={message} onChange={e=>setMessage(e.target.value)} placeholder="Tell us what worked well or what we could improve…"/></label><label className="feedback-label">Email (optional)<input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/></label>{status&&<p className="data-help" role="status">{status}</p>}<div className="data-modal-actions"><button className="data-secondary" onClick={()=>setOpen(false)}>Close</button><button className="data-primary" disabled={busy} onClick={submit}>{busy?'Sending…':'Send feedback'}</button></div></div></section></div>}</>;
+  async function submit(){
+    if(!emoji&&!message.trim()){setStatus('Please select an emoji or write feedback.');return;}
+    setBusy(true);setStatus('');
+    try {
+      const r=await fetch('/api/feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({emoji,feedback:message,email})});
+      const data=await r.json().catch(()=>({}));
+      if(!r.ok)throw new Error(data.error||'Could not send feedback.');
+      setStatus('Thank you for your feedback.');setMessage('');setEmoji('');
+    } catch(e) { setStatus(e.message||'Something went wrong.'); }
+    finally { setBusy(false); }
+  }
+  useEffect(()=>{
+    if(!open)return undefined;
+    const onKey=e=>{if(e.key==='Escape')setOpen(false);};
+    document.addEventListener('keydown',onKey);
+    return()=>document.removeEventListener('keydown',onKey);
+  },[open]);
+  return <>
+    <button className="feedback-fab" onClick={()=>setOpen(true)}><MessageSquareText size={16}/> Feedback</button>
+    {open&&<div className="contact-modal-overlay feedback-contact-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)setOpen(false);}} aria-hidden="false">
+      <section className="contact-modal-card feedback-contact-card" role="dialog" aria-modal="true" aria-labelledby="sessionFeedbackTitle">
+        <button className="contact-modal-close" type="button" aria-label="Close feedback window" onClick={()=>setOpen(false)}>&times;</button>
+        <div className="contact-modal-icon"><MessageSquareText size={25}/></div>
+        <p className="contact-modal-eyebrow">SIMPLY POKER</p>
+        <h2 id="sessionFeedbackTitle">We’d love to hear from you.</h2>
+        <p className="contact-modal-description">Have a suggestion, spotted an issue, or an idea to make Simply Poker better? Share your feedback with us.</p>
+        <div className="feedback-contact-form">
+          <div className="feedback-emojis">{['😞','😐','🙂','😊','😍'].map(x=><button type="button" className={emoji===x?'chosen':''} key={x} onClick={()=>setEmoji(x)} aria-label={x}>{x}</button>)}</div>
+          <label className="feedback-label">Your feedback<textarea rows="4" value={message} onChange={e=>setMessage(e.target.value)} placeholder="Tell us what worked well or what we could improve…"/></label>
+          <label className="feedback-label">Email (optional)<input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/></label>
+          {status&&<p className="feedback-contact-status" role="status">{status}</p>}
+        </div>
+        <button className="contact-email-button" type="button" disabled={busy} onClick={submit}>{busy?'Sending…':'Send feedback'}</button>
+        <p className="contact-modal-footer">We're listening. Every suggestion helps us make Simply Poker better.</p>
+      </section>
+    </div>}
+  </>;
 }
