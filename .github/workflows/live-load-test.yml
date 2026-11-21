@@ -1,0 +1,23 @@
+name: Live Socket.IO Load Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/live-load-test.mjs'
+
+jobs:
+  live-load:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm install
+      - name: Run controlled 5 and 10 participant checks
+        env:
+          TARGET_URL: https://simply-poker-react.onrender.com
+        run: node scripts/live-load-test.mjs
