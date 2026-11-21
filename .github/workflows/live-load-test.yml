@@ -1,10 +1,9 @@
 name: Live Socket.IO Load Check
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-    paths:
-      - 'scripts/live-load-test.mjs'
 
 jobs:
   live-load:
