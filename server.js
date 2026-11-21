@@ -17,14 +17,14 @@ const io = new Server(httpServer, {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-// Serve the original About experience as the public homepage while keeping
-// the migrated React application available at /start and /session routes.
+// Serve the React application for both the public homepage and the
+// legacy About.html URL. Both routes render the same AboutPage.jsx component.
 app.use(express.static(join(__dirname, 'dist'), { index: false }));
-app.get('/', (req, res) => {
-  const aboutPage = join(__dirname, 'public', 'About.html');
-  if (existsSync(aboutPage)) return res.sendFile(aboutPage);
+app.get(['/', '/About.html'], (req, res) => {
   return res.sendFile(join(__dirname, 'dist', 'index.html'));
 });
+// Keep original About.html and About_style.css in public as migration
+// reference assets; static assets (including /assets/about/*) remain available.
 app.use(express.static(join(__dirname, 'public')));
 
 // import fetch from 'node-fetch';  // <-- added for JIRA proxy support
