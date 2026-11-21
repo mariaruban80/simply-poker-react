@@ -732,3 +732,22 @@
     min-width: 0;
   }
 }
+
+/* Session feedback dialog visibility and stacking fix */
+.legacy-session .feedback-contact-overlay{position:fixed!important;inset:0!important;z-index:10050!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:24px!important;overflow-y:auto!important;background:rgba(24,13,39,.62)!important;backdrop-filter:blur(5px);opacity:1!important;visibility:visible!important;pointer-events:auto!important}
+.legacy-session .feedback-contact-card{position:relative!important;display:block!important;visibility:visible!important;opacity:1!important;transform:none!important;width:min(100%,520px)!important;max-height:calc(100vh - 48px)!important;overflow-y:auto!important;margin:auto!important;padding:36px!important;border:1px solid #eee5f7!important;border-radius:20px!important;background:#fff!important;box-shadow:0 24px 80px rgba(24,13,39,.28)!important;color:#30243c!important;z-index:1!important}
+.legacy-session .feedback-contact-card .contact-modal-close{position:absolute!important;top:14px!important;right:16px!important;display:grid!important;place-items:center!important;width:34px!important;height:34px!important;border:0!important;border-radius:50%!important;background:#f4eff9!important;color:#65409a!important;font-size:24px!important;cursor:pointer!important}
+.legacy-session .feedback-contact-card .contact-modal-icon{display:grid!important;place-items:center!important;width:58px!important;height:58px!important;margin:0 auto 16px!important;border-radius:50%!important;background:#f1eafa!important;color:#673ab7!important}
+.legacy-session .feedback-contact-card .contact-modal-eyebrow,.legacy-session .feedback-contact-card h2,.legacy-session .feedback-contact-card .contact-modal-description,.legacy-session .feedback-contact-card .contact-modal-footer{text-align:center!important}
+.legacy-session .feedback-contact-card .contact-modal-eyebrow{color:#7952ad!important;font-size:10px!important;font-weight:700!important;letter-spacing:2px!important}
+.legacy-session .feedback-contact-card h2{margin:8px 0 10px!important;color:#30243c!important;font-size:25px!important;line-height:1.25!important}
+.legacy-session .feedback-contact-card .contact-modal-description,.legacy-session .feedback-contact-card .contact-modal-footer{color:#756b80!important;font-size:13px!important;line-height:1.6!important}
+.legacy-session .feedback-contact-form{margin-top:20px!important}
+.legacy-session .feedback-contact-form .feedback-emojis{display:flex!important;justify-content:center!important;gap:12px!important;margin:14px 0 20px!important}
+.legacy-session .feedback-contact-form .feedback-emojis button{width:42px!important;height:42px!important;border:1px solid #e9e0f2!important;border-radius:50%!important;background:#fff!important;font-size:22px!important;cursor:pointer!important}
+.legacy-session .feedback-contact-form .feedback-emojis button.chosen{border-color:#7447b8!important;background:#f1eafa!important}
+.legacy-session .feedback-contact-form .feedback-label{display:block!important;margin:12px 0!important;color:#493c57!important;font-size:12px!important;font-weight:600!important}
+.legacy-session .feedback-contact-form textarea,.legacy-session .feedback-contact-form input{display:block!important;box-sizing:border-box!important;width:100%!important;margin-top:7px!important;padding:11px 12px!important;border:1px solid #e3dbea!important;border-radius:9px!important;background:#fff!important;color:#30243c!important;font:400 13px Inter,"Segoe UI",sans-serif!important}
+.legacy-session .feedback-contact-card .contact-email-button{display:block!important;width:100%!important;margin:18px 0 10px!important;padding:13px 18px!important;border:0!important;border-radius:10px!important;background:linear-gradient(110deg,#7040b0,#8b5bc7)!important;color:#fff!important;font:600 13px Inter,"Segoe UI",sans-serif!important;cursor:pointer!important}
+.legacy-session .feedback-contact-status{color:#68439c!important;font-size:12px!important}
+@media(max-width:600px){.legacy-session .feedback-contact-overlay{padding:12px!important}.legacy-session .feedback-contact-card{padding:30px 20px 22px!important;max-height:calc(100vh - 24px)!important}.legacy-session .feedback-contact-card h2{font-size:21px!important}}
