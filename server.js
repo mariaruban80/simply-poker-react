@@ -973,9 +973,13 @@ socket.join(roomId);
 
   // Send state to newly connected client
   socket.emit('resyncState', {
-    tickets: activeTickets,
+    tickets: activeTickets.map(ticket => ({
+      ...ticket,
+      points: rooms[roomId].storyPoints?.[ticket.id] ?? ticket.points ?? '?'
+    })),
     votesPerStory: activeVotes,
     votesRevealed: revealedVotes,
+    storyPoints: rooms[roomId].storyPoints || {},
     deletedStoryIds: Array.from(rooms[roomId].deletedStoryIds)
   });
 
@@ -1788,7 +1792,9 @@ socket.on('castVote', ({ vote, targetUserId, storyId, userName }) => {
     
     // Also send reveal status if applicable
     if (rooms[roomId].votesRevealed && rooms[roomId].votesRevealed[storyId]) {
-      socket.emit('votesRevealed', { storyId });
+      const ticket = rooms[roomId].tickets?.find(item => item.id === storyId);
+      const points = rooms[roomId].storyPoints?.[storyId] ?? ticket?.points ?? '?';
+      socket.emit('votesRevealed', { storyId, points });
     }
     
     // Check for user's previous vote by username first
