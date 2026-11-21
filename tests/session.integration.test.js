@@ -159,6 +159,7 @@ test('two participants can join, share stories, vote, reveal, reset and transfer
   guest.emit('requestFullStateResync');
   const stateAfterPoints = await restoredState;
   assert.equal(stateAfterPoints.storyPoints[story.id], '8');
+  assert.equal(stateAfterPoints.tickets.find((ticket) => ticket.id === story.id).points, '8');
   assert.equal(stateAfterPoints.allowMemberManage, true);
   assert.equal(stateAfterPoints.votingSystem, 'tshirt');
 
@@ -177,6 +178,16 @@ test('two participants can join, share stories, vote, reveal, reset and transfer
   const revealPayload = await revealed;
   assert.equal(revealPayload.storyId, story.id);
   assert.equal(revealPayload.points, '5');
+
+  const stateAfterRevealPromise = waitForEvent(guest, 'resyncState');
+  guest.emit('requestFullStateResync');
+  const stateAfterReveal = await stateAfterRevealPromise;
+  assert.equal(stateAfterReveal.storyPoints[story.id], '5');
+  assert.equal(stateAfterReveal.tickets.find((ticket) => ticket.id === story.id).points, '5');
+
+  const restoredRevealPromise = waitForEvent(guest, 'votesRevealed', (payload) => payload.storyId === story.id);
+  guest.emit('requestStoryVotes', { storyId: story.id });
+  assert.equal((await restoredRevealPromise).points, '5');
 
   const reset = waitForEvent(guest, 'votesReset', (payload) => payload.storyId === story.id);
   host.emit('resetVotes', { storyId: story.id });
