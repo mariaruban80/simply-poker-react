@@ -2,8 +2,6 @@ name: Live Socket.IO Load Check
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
 
 jobs:
   live-load:
