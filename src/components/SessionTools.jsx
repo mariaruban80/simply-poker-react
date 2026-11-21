@@ -108,41 +108,58 @@ export function SessionTimer({ onNotice }) {
 }
 
 export function FeedbackWidget() {
-  const [open,setOpen]=useState(false),[emoji,setEmoji]=useState(''),[message,setMessage]=useState(''),[email,setEmail]=useState(''),[status,setStatus]=useState(''),[busy,setBusy]=useState(false);
-  async function submit(){
-    if(!emoji&&!message.trim()){setStatus('Please select an emoji or write feedback.');return;}
-    setBusy(true);setStatus('');
-    try {
-      const r=await fetch('/api/feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({emoji,feedback:message,email})});
-      const data=await r.json().catch(()=>({}));
-      if(!r.ok)throw new Error(data.error||'Could not send feedback.');
-      setStatus('Thank you for your feedback.');setMessage('');setEmoji('');
-    } catch(e) { setStatus(e.message||'Something went wrong.'); }
-    finally { setBusy(false); }
-  }
+  const [open,setOpen]=useState(false);
+  const [emailOptionsOpen,setEmailOptionsOpen]=useState(false);
+  const recipient='mariaanand.ruban1980@gmail.com';
+  const subject=encodeURIComponent('Feedback - Simply Poker');
+  const body=encodeURIComponent('Hi Simply Poker,\\n\\n');
+  const query='?to='+encodeURIComponent(recipient)+'&subject='+subject+'&body='+body;
+  const outlookUrl='https://outlook.office.com/mail/deeplink/compose'+query;
+  const gmailUrl='https://mail.google.com/mail/?view=cm&fs=1'+query;
+  const mailtoUrl='mailto:'+recipient+'?subject='+subject+'&body='+body;
+
   useEffect(()=>{
-    if(!open)return undefined;
-    const onKey=e=>{if(e.key==='Escape')setOpen(false);};
+    if(!open&&!emailOptionsOpen)return undefined;
+    const onKey=e=>{
+      if(e.key==='Escape'){
+        if(emailOptionsOpen)setEmailOptionsOpen(false);
+        else setOpen(false);
+      }
+    };
     document.addEventListener('keydown',onKey);
     return()=>document.removeEventListener('keydown',onKey);
-  },[open]);
+  },[open,emailOptionsOpen]);
+
   return <>
-    <button className="feedback-fab" onClick={()=>setOpen(true)}><MessageSquareText size={16}/> Feedback</button>
-    {open&&<div className="contact-modal-overlay feedback-contact-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)setOpen(false);}} aria-hidden="false">
-      <section className="contact-modal-card feedback-contact-card" role="dialog" aria-modal="true" aria-labelledby="sessionFeedbackTitle">
-        <button className="contact-modal-close" type="button" aria-label="Close feedback window" onClick={()=>setOpen(false)}>&times;</button>
-        <div className="contact-modal-icon"><MessageSquareText size={25}/></div>
+    <button className="feedback-fab" type="button" onClick={()=>setOpen(true)}><MessageSquareText size={16}/> Feedback</button>
+    {open&&<div className="contact-modal-overlay feedback-contact-overlay" onMouseDown={e=>{if(e.target===e.currentTarget){setOpen(false);setEmailOptionsOpen(false);}}} aria-hidden="false">
+      <section className="contact-modal-card feedback-contact-card" role="dialog" aria-modal="true" aria-labelledby="contactModalTitle">
+        <button className="contact-modal-close" type="button" aria-label="Close contact window" onClick={()=>{setOpen(false);setEmailOptionsOpen(false);}}>&times;</button>
+        <div className="contact-modal-icon"><i className="fas fa-envelope" aria-hidden="true"/></div>
         <p className="contact-modal-eyebrow">SIMPLY POKER</p>
-        <h2 id="sessionFeedbackTitle">We’d love to hear from you.</h2>
-        <p className="contact-modal-description">Have a suggestion, spotted an issue, or an idea to make Simply Poker better? Share your feedback with us.</p>
-        <div className="feedback-contact-form">
-          <div className="feedback-emojis">{['😞','😐','🙂','😊','😍'].map(x=><button type="button" className={emoji===x?'chosen':''} key={x} onClick={()=>setEmoji(x)} aria-label={x}>{x}</button>)}</div>
-          <label className="feedback-label">Your feedback<textarea rows="4" value={message} onChange={e=>setMessage(e.target.value)} placeholder="Tell us what worked well or what we could improve…"/></label>
-          <label className="feedback-label">Email (optional)<input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/></label>
-          {status&&<p className="feedback-contact-status" role="status">{status}</p>}
+        <h2 id="contactModalTitle">We’d love to hear from you.</h2>
+        <p className="contact-modal-description">Have a suggestion, spotted an issue, or an idea to make Simply Poker better? We’re always happy to hear your feedback.</p>
+        <div className="contact-email-panel">
+          <span className="contact-email-label">SEND US YOUR FEEDBACK</span>
+          <a className="contact-email-address" href={mailtoUrl}>{recipient}</a>
+          <span className="contact-email-hint">Choose how you'd like to send your feedback.</span>
         </div>
-        <button className="contact-email-button" type="button" disabled={busy} onClick={submit}>{busy?'Sending…':'Send feedback'}</button>
+        <button className="contact-email-button" type="button" onClick={()=>setEmailOptionsOpen(true)}><i className="fas fa-envelope" aria-hidden="true"/> Email Us</button>
         <p className="contact-modal-footer">We're listening. Every suggestion helps us make Simply Poker better.</p>
+      </section>
+    </div>}
+    {emailOptionsOpen&&<div className="email-provider-overlay feedback-email-provider-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)setEmailOptionsOpen(false);}} aria-hidden="false">
+      <section className="email-provider-card" role="dialog" aria-modal="true" aria-labelledby="feedbackEmailProviderTitle">
+        <button className="email-provider-close" type="button" aria-label="Close email options" onClick={()=>setEmailOptionsOpen(false)}>&times;</button>
+        <div className="email-provider-icon"><i className="fas fa-paper-plane" aria-hidden="true"/></div>
+        <h2 id="feedbackEmailProviderTitle">Choose your email app</h2>
+        <p className="email-provider-description">How would you like to send your feedback?</p>
+        <div className="email-provider-options">
+          <a className="email-provider-option" href={outlookUrl} target="_blank" rel="noopener noreferrer"><span className="email-provider-logo outlook-logo"><i className="fas fa-envelope" aria-hidden="true"/></span><span className="email-provider-text"><strong>Outlook</strong><small>Compose using Outlook</small></span><i className="fas fa-chevron-right email-provider-chevron" aria-hidden="true"/></a>
+          <a className="email-provider-option" href={gmailUrl} target="_blank" rel="noopener noreferrer"><span className="email-provider-logo gmail-logo"><i className="fab fa-google" aria-hidden="true"/></span><span className="email-provider-text"><strong>Gmail</strong><small>Compose using Gmail</small></span><i className="fas fa-chevron-right email-provider-chevron" aria-hidden="true"/></a>
+          <a className="email-provider-option" href={mailtoUrl}><span className="email-provider-logo default-mail-logo"><i className="fas fa-at" aria-hidden="true"/></span><span className="email-provider-text"><strong>Default Mail App</strong><small>Use your configured email application</small></span><i className="fas fa-chevron-right email-provider-chevron" aria-hidden="true"/></a>
+        </div>
+        <button type="button" className="email-provider-cancel" onClick={()=>setEmailOptionsOpen(false)}>Cancel</button>
       </section>
     </div>}
   </>;
